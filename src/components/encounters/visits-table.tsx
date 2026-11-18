@@ -13,7 +13,7 @@ export function VisitsTable({
   const { t } = useTranslations();
   const format = useFormatters();
   return (
-    <div className="border-border overflow-x-auto rounded-lg border">
+    <div className="border-border relative overflow-x-auto rounded-lg border">
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{t("visitExtraction.table")}</caption>
         <thead className="bg-muted">
@@ -28,7 +28,7 @@ export function VisitsTable({
               "source",
             ].map((key) => (
               <th scope="col" className="px-3 py-3 font-medium" key={key}>
-                {t(`visitExtraction.${key}`)}
+                {t(`visitExtraction.fields.${key}`)}
               </th>
             ))}
           </tr>
@@ -82,7 +82,7 @@ export function VisitsTable({
                       href={`/documents?doc=${encodeURIComponent(doc.id)}`}
                       className="text-primary mb-2 block underline underline-offset-4"
                     >
-                      {doc.label || t("visitExtraction.source")}
+                      {doc.label || t("visitExtraction.fields.source")}
                     </Link>
                   ))}
               </td>

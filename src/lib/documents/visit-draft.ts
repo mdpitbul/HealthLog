@@ -112,7 +112,7 @@ export async function executeVisitDraft(args: {
       status: 422,
       message:
         "The document could not be read into a visit draft. The document is unchanged; try again or enter the visit manually.",
-      errorCode: "visitExtraction.failed",
+      errorCode: "documents.inbound.extractFailed",
     };
   } finally {
     await settleAiRunBudget(

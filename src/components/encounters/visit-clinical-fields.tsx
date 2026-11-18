@@ -27,7 +27,7 @@ export function VisitClinicalFields({
         <FieldGroup
           key={field}
           htmlFor={`visit-clinical-${field}`}
-          label={t(`visitExtraction.${field}`)}
+          label={t(`visitExtraction.fields.${field}`)}
         >
           {index < 3 ? (
             <Input

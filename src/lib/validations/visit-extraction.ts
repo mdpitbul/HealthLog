@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { isoDateTime } from "@/lib/validations/datetime";
 
 import { dateOnlyKey } from "@/lib/tz/date-only";
 export const visitDate = z.iso
@@ -55,6 +56,6 @@ export const confirmVisitDraftSchema = z
     date: visitDate,
     clinical: visitClinicalSchema,
     encounterId: z.string().min(1).max(40).nullable(),
-    expectedUpdatedAt: z.iso.datetime().nullable(),
+    expectedUpdatedAt: isoDateTime().nullable(),
   })
   .strict();

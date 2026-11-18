@@ -83,3 +83,9 @@ a Docker image artifact for three days. It does not publish an upstream release
 or deploy anything. Load that artifact on the test server, set its exact image
 tag in the test `.env`, then recreate only the app in this compose project.
 Never run these commands from the production compose directory.
+
+The source-size baseline changes are limited to the existing encounter update
+handler (clinical encryption), document sheet/link block (preview and action),
+visit restore handler (the new encrypted field), and day reader (same visit's
+clinical text). The new review UI is split into smaller components rather than
+adding a large review-function baseline.

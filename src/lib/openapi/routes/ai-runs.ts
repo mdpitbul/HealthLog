@@ -23,6 +23,7 @@ import {
   documentSuggestResponse,
   documentSummaryResponse,
 } from "./documents";
+import { visitDraftRunResult } from "./visit-drafts";
 import { supplementLabelExtractResult } from "./medications";
 import { ocrExtractResponse } from "./ocr";
 import { dataEnvelope, errorEnvelope, stdResponses } from "./shared";
@@ -31,6 +32,7 @@ const aiRun = z
   .object({
     id: z.string(),
     kind: z.enum([
+      "DOCUMENT_VISIT_DRAFT",
       "DOCUMENT_INDEX",
       "LABS_OCR_EXTRACT",
       "DOCUMENT_SUMMARY",
@@ -45,6 +47,7 @@ const aiRun = z
     status: z.enum(["QUEUED", "RUNNING", "SUCCEEDED", "FAILED"]),
     result: z
       .union([
+        visitDraftRunResult,
         documentIndexResponse,
         ocrExtractResponse,
         documentSummaryResponse,

@@ -14,6 +14,7 @@
  * reaches no response, because every preventive-care read excludes it. The
  * published contract stays at two members deliberately.
  */
+import { visitClinicalSchema } from "@/lib/validations/visit-extraction";
 import { withRelated } from "./relation-links";
 import type { ZodOpenApiObject } from "zod-openapi";
 import { z } from "zod/v4";
@@ -223,6 +224,7 @@ const encounter = z
     practitioner: practitioner.nullable(),
     reason: z.string().nullable(),
     outcome: z.string().nullable(),
+    clinical: visitClinicalSchema.nullable().optional(),
     bodySite: z.string().nullable(),
     laterality: lateralityEnum.nullable(),
     reminderNextDueAt: z.string().nullable(),

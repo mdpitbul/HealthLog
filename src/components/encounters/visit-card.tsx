@@ -123,7 +123,7 @@ export function VisitCard({
                   return value ? (
                     <p key={key} className="line-clamp-2">
                       <span className="text-muted-foreground">
-                        {t(`visitExtraction.${key}`)}:{" "}
+                        {t(`visitExtraction.fields.${key}`)}:{" "}
                       </span>
                       {value}
                     </p>

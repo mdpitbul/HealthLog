@@ -14440,7 +14440,6 @@
     "failed": "The read failed.",
     "partial": "Only {read} of {total} pages were read. Check the remaining pages manually.",
     "uncertain": "Check these fragments",
-    "source": "Document",
     "evidence": "Excerpts from the original",
     "page": "Page {page}",
     "destination": "Save to",
@@ -14448,14 +14447,6 @@
     "existingNote": "The reviewed clinical block will be added to this visit, replacing its previous clinical block. Its date, manual notes and other links stay unchanged.",
     "existingDetails": "Current clinical block",
     "targetFailed": "Could not load the visit list or selected visit. Retry before selecting an existing visit.",
-    "date": "Visit date",
-    "doctor": "Doctor",
-    "specialty": "Specialty",
-    "clinic": "Clinic",
-    "complaints": "Complaints",
-    "diagnoses": "Diagnoses",
-    "treatment": "Prescribed treatment",
-    "followUp": "Further actions",
     "reviewed": "I checked the date, names, diagnoses and prescriptions against the original.",
     "saveFailed": "Could not save the visit.",
     "saving": "Saving…",
@@ -14463,6 +14454,17 @@
     "save": "Save visit and link document",
     "view": "Visit view",
     "cards": "Cards",
-    "table": "Summary table"
+    "table": "Summary table",
+    "fields": {
+      "date": "Visit date",
+      "doctor": "Doctor",
+      "specialty": "Specialty",
+      "clinic": "Clinic",
+      "complaints": "Complaints",
+      "diagnoses": "Diagnoses",
+      "treatment": "Prescribed treatment",
+      "followUp": "Further actions",
+      "source": "Document"
+    }
   }
 }

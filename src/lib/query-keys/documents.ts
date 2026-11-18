@@ -31,8 +31,6 @@ export interface DocumentVaultFilters {
 export const documentKeys = {
   documents: () => ["documents"] as const,
   documentVisitDraft: (id: string) => ["documents", "visit-draft", id] as const,
-  documentVisitDraftTargets: (endpoint: string) =>
-    ["documents", "visit-draft-targets", endpoint] as const,
   /**
    * The vault presentation (view + month arrangement). Deliberately outside
    * the `["documents"]` prefix: a document write changes nothing about how

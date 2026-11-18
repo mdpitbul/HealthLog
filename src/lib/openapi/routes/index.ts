@@ -58,6 +58,7 @@ import { dashboardWidgetPaths } from "./dashboard";
 import { dayPaths } from "./day";
 import { searchPaths } from "./search";
 import { biomarkerPaths } from "./biomarkers";
+import { visitDraftPaths } from "./visit-drafts";
 import { inboundDocumentPaths } from "./documents";
 import { documentSourcePaths } from "./document-sources";
 import { devicePaths } from "./devices";
@@ -139,6 +140,7 @@ const registeredPaths: NonNullable<ZodOpenApiObject["paths"]> = {
   ...allergyPaths,
   ...familyHistoryPaths,
   ...inboundDocumentPaths,
+  ...visitDraftPaths,
   ...customMetricPaths,
   ...onboardingPaths,
   // v1.28 — nutrient-intake sync (appended; spread order is load-bearing).

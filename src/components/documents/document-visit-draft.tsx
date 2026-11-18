@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QueryErrorRow } from "@/components/ui/query-error-row";
+import { useEncounters } from "@/hooks/use-encounters";
 import { Input } from "@/components/ui/input";
 import { FieldGroup } from "@/components/ui/field-group";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -17,7 +19,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useTranslations, useFormatters } from "@/lib/i18n/context";
 import { visitPath } from "@/lib/encounters/visit-links";
 import type { AiRunAccepted } from "@/lib/documents/ai-runs/types";
-import type { EncounterListDTO, EncounterDTO } from "@/lib/encounters/dto";
+import type { EncounterDTO } from "@/lib/encounters/dto";
 import type { VisitDraft } from "@/lib/validations/visit-extraction";
 
 export function DocumentVisitDraft({
@@ -99,12 +101,12 @@ function DraftSheet({
       {query.isPending ? (
         <p role="status">{t("visitExtraction.loading")}</p>
       ) : query.isError ? (
-        <div role="alert">
-          <p>{t("visitExtraction.loadFailed")}</p>
-          <Button variant="outline" onClick={() => void query.refetch()}>
-            {t("visitExtraction.retry")}
-          </Button>
-        </div>
+        <QueryErrorRow
+          error={query.error}
+          message={t("visitExtraction.loadFailed")}
+          retryLabel={t("visitExtraction.retry")}
+          onRetry={() => void query.refetch()}
+        />
       ) : draft?.savedEncounterId ? (
         <div className="space-y-4">
           <p>{t("visitExtraction.saved")}</p>
@@ -172,12 +174,9 @@ function ReviewDraft({
   const [clinical, setClinical] = useState(draft.extraction.clinical);
   const [target, setTarget] = useState<EncounterDTO | null>(null);
   const [reviewed, setReviewed] = useState(false);
-  const [targetError, setTargetError] = useState(false);
+  const [targetError, setTargetError] = useState<Error | null>(null);
   const [targetPending, setTargetPending] = useState(false);
-  const visits = useQuery({
-    queryKey: queryKeys.documentVisitDraftTargets(endpoint),
-    queryFn: () => apiGet<EncounterListDTO>("/api/encounters?limit=200"),
-  });
+  const visits = useEncounters();
   const save = useMutation({
     mutationFn: () =>
       apiPost<{ encounterId: string }>(`${endpoint}/confirm`, {
@@ -203,7 +202,7 @@ function ReviewDraft({
   const chooseTarget = async (id: string) => {
     onDirty(true);
     setReviewed(false);
-    setTargetError(false);
+    setTargetError(null);
     if (!id) {
       setTarget(null);
       return;
@@ -213,8 +212,10 @@ function ReviewDraft({
       setTarget(
         await apiGet<EncounterDTO>(`/api/encounters/${encodeURIComponent(id)}`),
       );
-    } catch {
-      setTargetError(true);
+    } catch (error) {
+      setTargetError(
+        error instanceof Error ? error : new Error("Visit unavailable"),
+      );
     } finally {
       setTargetPending(false);
     }
@@ -257,27 +258,11 @@ function ReviewDraft({
         </div>
       ) : null}
       <div className="grid min-w-0 gap-6 md:grid-cols-2">
-        <div className="min-w-0 md:sticky md:top-0 md:self-start">
-          <InlinePreview
-            src={previewSrc}
-            failed={!previewSrc}
-            mimeType={mimeType}
-            title={t("visitExtraction.source")}
-          />
-          <details className="mt-3 text-sm">
-            <summary>{t("visitExtraction.evidence")}</summary>
-            <ul className="mt-2 space-y-2">
-              {draft.extraction.evidence.map((e, i) => (
-                <li key={i}>
-                  <span className="text-muted-foreground">
-                    {t("visitExtraction.page", { page: e.page })}:{" "}
-                  </span>
-                  {e.quote}
-                </li>
-              ))}
-            </ul>
-          </details>
-        </div>
+        <ReviewSource
+          draft={draft}
+          previewSrc={previewSrc}
+          mimeType={mimeType}
+        />
         <div className="min-w-0 space-y-4">
           <FieldGroup
             htmlFor="visit-draft-target"
@@ -304,51 +289,26 @@ function ReviewDraft({
               ))}
             </NativeSelect>
           </FieldGroup>
-          {target ? (
-            <div className="bg-muted rounded-lg p-3 text-sm">
-              <p>{t("visitExtraction.existingNote")}</p>
-              {target.clinical ? (
-                <details className="mt-2">
-                  <summary>{t("visitExtraction.existingDetails")}</summary>
-                  <pre className="mt-2 font-sans whitespace-pre-wrap">
-                    {[
-                      target.clinical.doctor,
-                      target.clinical.specialty,
-                      target.clinical.clinic,
-                      target.clinical.complaints,
-                      target.clinical.diagnoses,
-                      target.clinical.treatment,
-                      target.clinical.followUp,
-                    ]
-                      .filter(Boolean)
-                      .join("\n\n")}
-                  </pre>
-                </details>
-              ) : null}
-            </div>
-          ) : null}
+          {target ? <ExistingClinicalBlock target={target} /> : null}
           {targetError || visits.isError ? (
-            <p role="alert" className="text-destructive text-sm">
-              {t("visitExtraction.targetFailed")}
-            </p>
-          ) : null}
-          <FieldGroup
-            htmlFor="visit-draft-date"
-            label={t("visitExtraction.date")}
-          >
-            <Input
-              id="visit-draft-date"
-              type="date"
-              required
-              value={target ? target.occurredAt.slice(0, 10) : date}
-              disabled={!!target}
-              onChange={(e) => {
-                setDate(e.target.value);
-                onDirty(true);
-                setReviewed(false);
+            <QueryErrorRow
+              error={targetError ?? visits.error}
+              message={t("visitExtraction.targetFailed")}
+              onRetry={() => {
+                setTargetError(null);
+                void visits.refetch();
               }}
             />
-          </FieldGroup>
+          ) : null}
+          <VisitDraftDateField
+            target={target}
+            date={date}
+            onChange={(value) => {
+              setDate(value);
+              onDirty(true);
+              setReviewed(false);
+            }}
+          />
           <VisitClinicalFields
             value={clinical}
             onChange={(next) => {
@@ -378,7 +338,7 @@ function ReviewDraft({
               !reviewed ||
               save.isPending ||
               targetPending ||
-              targetError ||
+              !!targetError ||
               !(target || date)
             }
           >
@@ -391,5 +351,96 @@ function ReviewDraft({
         </div>
       </div>
     </form>
+  );
+}
+
+function ReviewSource({
+  draft,
+  previewSrc,
+  mimeType,
+}: {
+  draft: VisitDraft;
+  previewSrc: string | null;
+  mimeType: string;
+}) {
+  const { t } = useTranslations();
+  return (
+    <div className="min-w-0 md:sticky md:top-0 md:self-start">
+      <InlinePreview
+        src={previewSrc}
+        failed={!previewSrc}
+        mimeType={mimeType}
+        title={t("visitExtraction.fields.source")}
+      />
+      <details className="mt-3 text-sm">
+        <summary>{t("visitExtraction.evidence")}</summary>
+        <ul className="mt-2 space-y-2">
+          {draft.extraction.evidence.map((e, i) => (
+            <li key={i}>
+              <span className="text-muted-foreground">
+                {t("visitExtraction.page", { page: e.page })}:{" "}
+              </span>
+              {e.quote}
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  );
+}
+
+function ExistingClinicalBlock({ target }: { target: EncounterDTO }) {
+  const { t } = useTranslations();
+  const clinical = target.clinical;
+  return (
+    <div className="bg-muted rounded-lg p-3 text-sm">
+      <p>{t("visitExtraction.existingNote")}</p>
+      {clinical ? (
+        <details className="mt-2">
+          <summary>{t("visitExtraction.existingDetails")}</summary>
+          <pre className="mt-2 font-sans whitespace-pre-wrap">
+            {[
+              clinical.doctor,
+              clinical.specialty,
+              clinical.clinic,
+              clinical.complaints,
+              clinical.diagnoses,
+              clinical.treatment,
+              clinical.followUp,
+            ]
+              .filter(Boolean)
+              .join("\n\n")}
+          </pre>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
+function VisitDraftDateField({
+  target,
+  date,
+  onChange,
+}: {
+  target: EncounterDTO | null;
+  date: string;
+  onChange: (value: string) => void;
+}) {
+  const { t } = useTranslations();
+  const format = useFormatters();
+  return (
+    <FieldGroup
+      htmlFor="visit-draft-date"
+      label={t("visitExtraction.fields.date")}
+    >
+      <Input
+        id="visit-draft-date"
+        type={target ? "text" : "date"}
+        required
+        value={target ? format.date(target.occurredAt) : date}
+        disabled={!!target}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </FieldGroup>
   );
 }

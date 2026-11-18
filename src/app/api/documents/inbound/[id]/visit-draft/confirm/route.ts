@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { apiHandler, requireAuth } from "@/lib/api-handler";
-import { apiError, apiSuccess, safeJson } from "@/lib/api-response";
+import { apiError, apiSuccess } from "@/lib/api-response";
+import { parseJsonBody } from "@/lib/api/body";
 import { encryptToBytes } from "@/lib/ai/coach/bytes-codec";
 import { prisma } from "@/lib/db";
 import { requireModuleEnabled } from "@/lib/modules/gate";
@@ -18,11 +19,12 @@ export const POST = apiHandler(
     const gate = await requireModuleEnabled(user.id, "inboundDocuments");
     if (!gate.enabled) return gate.response;
     const { id } = await params;
-    const body = await safeJson(request, { maxBytes: 48 * 1024 });
-    if (body.error) return body.error;
-    const parsed = confirmVisitDraftSchema.safeParse(body.data);
-    if (!parsed.success)
-      return apiError("Check the visit date and fields", 422);
+    const parsed = await parseJsonBody(request, confirmVisitDraftSchema, {
+      maxBytes: 48 * 1024,
+      errorCode: "encounter.invalid",
+      action: "documents.visit.confirm.invalid",
+    });
+    if (!parsed.ok) return parsed.error;
     const entry = parsed.data;
     const result = await prisma.$transaction(async (tx) => {
       // Serialize saves against extraction, deletion and another confirmation.
