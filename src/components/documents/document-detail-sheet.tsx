@@ -318,6 +318,7 @@ export function DocumentDetailSheet({
               <DocumentRecordLinks
                 key={`${doc.id}:${linkResets}`}
                 doc={doc}
+                previewSrc={inlineSrc}
                 canManage={canManageDocuments}
                 seedFresh={linkSeedFresh}
                 seedError={!linkSeedFresh && detailQuery.isRefetchError}

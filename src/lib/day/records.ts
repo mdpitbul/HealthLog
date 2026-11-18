@@ -29,6 +29,7 @@ import type {
   DaySectionKey,
 } from "@/lib/day/contract";
 import { prisma } from "@/lib/db";
+import { readClinical } from "@/lib/encounters/clinical";
 import { formatRecordedNumber } from "@/lib/format/recorded-number";
 import { SCREENER_INSTRUMENTS } from "@/lib/validations/mental-health";
 import { listTargetsBySource } from "@/lib/links/link-service";
@@ -617,6 +618,7 @@ async function visitsPart(frame: DayFrame): Promise<SectionPart> {
       status: true,
       reasonEncrypted: true,
       outcomeEncrypted: true,
+      clinicalEncrypted: true,
       practitioner: { select: { name: true } },
     },
     orderBy: { occurredAt: "asc" },
@@ -628,22 +630,30 @@ async function visitsPart(frame: DayFrame): Promise<SectionPart> {
   );
   return {
     running: [],
-    events: rows.map((row) =>
-      event({
+    events: rows.map((row) => {
+      const clinical = readClinical(row.clinicalEncrypted);
+      return event({
         at: row.occurredAt.toISOString(),
         kind: row.kind === "PROCEDURE" ? "procedure" : "visit",
         section: "visits",
         id: row.id,
         title:
-          openText(row.reasonEncrypted, "visit reason") ??
-          row.practitioner?.name ??
+          openText(row.reasonEncrypted, "visit reason") ||
+          clinical?.diagnoses ||
+          clinical?.doctor ||
+          row.practitioner?.name ||
           "",
         meta: row.status === "PLANNED" ? "PLANNED" : row.kind,
-        note: openText(row.outcomeEncrypted, "visit outcome"),
+        note:
+          openText(row.outcomeEncrypted, "visit outcome") ||
+          [clinical?.treatment, clinical?.followUp]
+            .filter(Boolean)
+            .join("\n\n") ||
+          null,
         docs: docs.get(row.id) ?? [],
         href: visitPath(row.id),
-      }),
-    ),
+      });
+    }),
   };
 }
 

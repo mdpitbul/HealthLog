@@ -23,6 +23,7 @@
  * reach the doses (`vaccinationLinks: null`) shows no dose block rather than
  * an empty one that would claim the page records none.
  */
+import { DocumentVisitDraft } from "./document-visit-draft";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Syringe } from "lucide-react";
@@ -137,6 +138,7 @@ function doseName(
 export function DocumentRecordLinks({
   doc,
   canManage,
+  previewSrc = null,
   seedFresh,
   seedError = false,
   onRetrySeed,
@@ -144,6 +146,7 @@ export function DocumentRecordLinks({
 }: {
   doc: InboundDocumentDetailDto;
   canManage: boolean;
+  previewSrc?: string | null;
   /**
    * Whether `doc` was read from the server since the sheet opened. Every
    * change is a replace-set write seeded from `doc`'s links, so a seed from a
@@ -279,6 +282,14 @@ export function DocumentRecordLinks({
             ))}
           </div>
         </div>
+      ) : null}
+
+      {canManage ? (
+        <DocumentVisitDraft
+          documentId={doc.id}
+          previewSrc={previewSrc}
+          mimeType={doc.mimeType}
+        />
       ) : null}
 
       {showDoses && canManage ? (

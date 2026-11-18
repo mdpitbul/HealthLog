@@ -197,6 +197,8 @@ describe("every capability reaches a route", () => {
 
 /** The route that queues each kind of background run. */
 const RUN_QUEUED_BY: Record<DocumentAiRunKindValue, string> = {
+  DOCUMENT_VISIT_DRAFT:
+    "src/app/api/documents/inbound/[id]/visit-draft/route.ts",
   DOCUMENT_INDEX: "src/app/api/documents/inbound/[id]/index/route.ts",
   LABS_OCR_EXTRACT: "src/app/api/labs/ocr/extract/route.ts",
   DOCUMENT_SUMMARY: "src/app/api/documents/inbound/[id]/summary/route.ts",

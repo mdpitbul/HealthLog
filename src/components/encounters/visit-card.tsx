@@ -81,8 +81,9 @@ export function VisitCard({
   const procedureHeading = isProcedure ? encounter.reason : null;
   const heading =
     procedureHeading ??
-    encounter.practitioner?.name ??
-    encounterKindText(t, encounter.kind as EncounterKind);
+    (encounter.clinical?.doctor ||
+      encounter.practitioner?.name ||
+      encounterKindText(t, encounter.kind as EncounterKind));
   const reasonLine = procedureHeading ? null : encounter.reason;
   const practiceLine = procedureHeading
     ? (encounter.practitioner?.name ?? null)
@@ -109,8 +110,28 @@ export function VisitCard({
             }
           />
           <p className="text-muted-foreground text-xs">
-            {format.dateTime(encounter.occurredAt)}
+            {encounter.clinical?.dateOnly
+              ? format.date(encounter.occurredAt)
+              : format.dateTime(encounter.occurredAt)}
           </p>
+
+          {encounter.clinical ? (
+            <div className="space-y-1 text-sm">
+              {(["clinic", "diagnoses", "treatment", "followUp"] as const).map(
+                (key) => {
+                  const value = encounter.clinical?.[key];
+                  return value ? (
+                    <p key={key} className="line-clamp-2">
+                      <span className="text-muted-foreground">
+                        {t(`visitExtraction.${key}`)}:{" "}
+                      </span>
+                      {value}
+                    </p>
+                  ) : null;
+                },
+              )}
+            </div>
+          ) : null}
 
           {reasonLine ? (
             <p className="text-foreground line-clamp-1 text-sm">{reasonLine}</p>

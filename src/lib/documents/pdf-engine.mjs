@@ -467,7 +467,8 @@ function inkRatio(context, width, height) {
 /**
  * @typedef {object} RenderOptions
  * @property {number} maxPages Pages to render from the first.
- * @property {number} targetLongEdge Longest edge of a rendered page, never upscaled.
+ * @property {number} targetLongEdge Longest edge of a rendered page.
+ * @property {boolean} [allowUpscale] Render vectors at higher resolution when requested.
  * @property {number} jpegQuality
  * @property {number} minInkRatio Below this share of dark pixels a page counts as blank.
  * @property {boolean} [withText] Also read each rendered page's text layer.
@@ -508,7 +509,11 @@ export async function renderPdfPages(data, options) {
         const longEdge = Math.max(base.width, base.height);
         // Cap the long edge, never upscale (scale <= 1).
         const scale =
-          longEdge > 0 ? Math.min(1, options.targetLongEdge / longEdge) : 1;
+          longEdge > 0
+            ? options.allowUpscale
+              ? options.targetLongEdge / longEdge
+              : Math.min(1, options.targetLongEdge / longEdge)
+            : 1;
         const viewport = page.getViewport({ scale });
 
         const factory = /** @type {RenderTargetFactory} */ (doc.canvasFactory);

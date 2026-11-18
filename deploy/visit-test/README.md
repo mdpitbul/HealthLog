@@ -57,3 +57,29 @@ back the image alone may not suffice; restore the matching test database snapsho
 
 Run `docker compose stop` from this stack's directory. The test volumes remain.
 Never use production volume names or a production database URL in this stack.
+
+## Visit review flow
+
+This branch adds an explicit **Create visit with AI** action to an owned
+document. Automatic lab indexing remains independent. The original is read
+in a background job into an encrypted draft; no encounter, illness episode or
+medication is created by that read. A review shows the PDF, literal source
+excerpts and uncertain fragments. The first four pages are rendered at 3200 px
+(JPEG 95); a longer document displays an explicit partial-read notice.
+
+Confirmation creates the visit and source link in one transaction. Replaying
+confirmation returns the same visit. Choosing an existing visit replaces only
+the reviewed clinical block, with an optimistic updatedAt check; manual notes,
+date and other links survive. Illness episodes and medication records remain
+manual and are never inferred or merged from a diagnosis.
+
+The clinical block and document draft use nullable encrypted columns on the
+existing encounter/document records. Both join encrypted backup/restore and key
+rotation. The additive migration does not alter previous records. A date without
+a stated time is displayed as a date; local noon is only its timeline anchor.
+
+The **Build isolated visit test image** workflow validates the branch and stores
+a Docker image artifact for three days. It does not publish an upstream release
+or deploy anything. Load that artifact on the test server, set its exact image
+tag in the test `.env`, then recreate only the app in this compose project.
+Never run these commands from the production compose directory.

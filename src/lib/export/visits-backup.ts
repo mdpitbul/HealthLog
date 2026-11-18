@@ -98,6 +98,8 @@ export interface EncounterBackupEntry {
   outcomeEncrypted?: string | null;
   /** The procedure's body site, ciphertext like the two above (v1.39.1). */
   bodySiteEncrypted?: string | null;
+  clinicalEncrypted?: string | null;
+  clinical?: string | null;
   /** The three readable; portable payloads only. */
   reason?: string | null;
   outcome?: string | null;
@@ -167,6 +169,7 @@ const ENCOUNTER_BACKUP_SELECT = {
   reasonEncrypted: true,
   outcomeEncrypted: true,
   bodySiteEncrypted: true,
+  clinicalEncrypted: true,
   laterality: true,
   reminderId: true,
   createdAt: true,
@@ -319,8 +322,19 @@ export async function buildVisitsBackupSection(
             reasonEncrypted: encodeSealedBytes(row.reasonEncrypted),
             outcomeEncrypted: encodeSealedBytes(row.outcomeEncrypted),
             bodySiteEncrypted: encodeSealedBytes(row.bodySiteEncrypted),
+            ...(row.clinicalEncrypted
+              ? { clinicalEncrypted: encodeSealedBytes(row.clinicalEncrypted) }
+              : {}),
           }
         : {
+            ...(row.clinicalEncrypted
+              ? {
+                  clinical: openSealedBytesForExport(
+                    row.clinicalEncrypted,
+                    "visit clinical details",
+                  ),
+                }
+              : {}),
             reason: openSealedBytesForExport(
               row.reasonEncrypted,
               "visit reason",
@@ -438,6 +452,8 @@ export type RestoredEncounter = Pick<
       | "reasonEncrypted"
       | "outcomeEncrypted"
       | "bodySiteEncrypted"
+      | "clinicalEncrypted"
+      | "clinical"
       | "reason"
       | "outcome"
       | "bodySite"
@@ -584,6 +600,12 @@ export async function restoreVisitsData(
             entry.bodySiteEncrypted,
             entry.bodySite,
             `encounters.${entry.id}.bodySiteEncrypted`,
+            unopened,
+          ),
+          clinicalEncrypted: sealBytesForRestore(
+            entry.clinicalEncrypted,
+            entry.clinical,
+            `encounters.${entry.id}.clinicalEncrypted`,
             unopened,
           ),
           laterality: entry.laterality ?? null,

@@ -46,6 +46,8 @@ export interface DocumentBackupEntry {
   errorReason?: string | null;
   /** Base64 of the already-encrypted summary BYTEA value. */
   summaryEncrypted?: string | null;
+  visitDraftEncrypted?: string | null;
+  visitDraft?: string | null;
   summaryGeneratedAt?: string | null;
   summaryState?: string;
   /** Refs #776 — the index-attempt record, carried verbatim (canonical DR). */
@@ -77,6 +79,7 @@ const DOCUMENT_PORTABLE_SELECT = {
   reportDate: true,
   documentDate: true,
   summaryEncrypted: true,
+  visitDraftEncrypted: true,
   sourceSystem: true,
   sourceId: true,
   sourceInstance: true,
@@ -164,6 +167,13 @@ function serialiseDocument(
       summaryEncrypted: dr.summaryEncrypted
         ? Buffer.from(dr.summaryEncrypted).toString("base64")
         : null,
+      ...(dr.visitDraftEncrypted
+        ? {
+            visitDraftEncrypted: Buffer.from(dr.visitDraftEncrypted).toString(
+              "base64",
+            ),
+          }
+        : {}),
       summaryGeneratedAt: dr.summaryGeneratedAt?.toISOString() ?? null,
       summaryState: dr.summaryState,
       lastIndexAttemptAt: dr.lastIndexAttemptAt?.toISOString() ?? null,
@@ -176,6 +186,9 @@ function serialiseDocument(
   return {
     ...metadata,
     summary: decryptSummarySoft(d.summaryEncrypted),
+    ...(d.visitDraftEncrypted
+      ? { visitDraft: decryptSummarySoft(d.visitDraftEncrypted) }
+      : {}),
   };
 }
 
@@ -396,6 +409,9 @@ export async function restoreDocuments(ctx: RestoreContext): Promise<void> {
         errorReason: document.errorReason ?? null,
         summaryEncrypted: document.summaryEncrypted
           ? decodeEncryptedBytes(document.summaryEncrypted)
+          : null,
+        visitDraftEncrypted: document.visitDraftEncrypted
+          ? decodeEncryptedBytes(document.visitDraftEncrypted)
           : null,
         summaryGeneratedAt: document.summaryGeneratedAt
           ? new Date(document.summaryGeneratedAt)

@@ -54,6 +54,8 @@ export const encounterBackupSchema = z
     // The procedure's body site and side. Optional so a file written
     // before they existed still parses; the visit restores with neither.
     bodySiteEncrypted: base64BytesSchema.nullable().optional(),
+    clinicalEncrypted: base64BytesSchema.nullable().optional(),
+    clinical: z.string().max(48000).nullable().optional(),
     // The readable reason, outcome and body site of a portable file.
     reason: z.string().nullable().optional(),
     outcome: z.string().nullable().optional(),

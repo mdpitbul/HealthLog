@@ -40,6 +40,8 @@ export const documentBackupSchema = z
     providerType: z.string().nullable().optional(),
     errorReason: z.string().nullable().optional(),
     summaryEncrypted: base64BytesSchema.nullable().optional(),
+    visitDraftEncrypted: base64BytesSchema.nullable().optional(),
+    visitDraft: z.string().max(160000).nullable().optional(),
     summaryGeneratedAt: isoDateTime.nullable().optional(),
     summaryState: z.enum(DocumentSummaryState).optional(),
     // Refs #776 — the index-attempt record (canonical DR payloads only).

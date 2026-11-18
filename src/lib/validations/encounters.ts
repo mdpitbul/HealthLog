@@ -18,6 +18,7 @@
  * park a row a century out.
  */
 import { z } from "zod/v4";
+import { visitClinicalSchema } from "./visit-extraction";
 import { isoDateTime } from "@/lib/validations/datetime";
 
 /** Ten years out. Long enough for any real appointment, short enough that a
@@ -101,6 +102,7 @@ export const encounterCreateSchema = z
     reason: z.string().max(2000).nullable().optional(),
     /** Becomes `outcomeEncrypted`. */
     outcome: z.string().max(4000).nullable().optional(),
+    clinical: visitClinicalSchema.nullable().optional(),
     bodySite,
     laterality: lateralityEnum.nullable().optional(),
     /** The checkup this visit closes, when it was filed from a due one. */
@@ -128,6 +130,7 @@ export const encounterUpdateSchema = z
     practitionerId: id.nullable().optional(),
     reason: z.string().max(2000).nullable().optional(),
     outcome: z.string().max(4000).nullable().optional(),
+    clinical: visitClinicalSchema.nullable().optional(),
     bodySite,
     laterality: lateralityEnum.nullable().optional(),
     reminderId: id.nullable().optional(),

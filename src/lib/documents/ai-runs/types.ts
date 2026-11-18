@@ -17,6 +17,7 @@ import type {
 import type { OcrExtractResponseDto } from "@/lib/validations/labs-ocr";
 
 export const DOCUMENT_AI_RUN_KINDS = [
+  "DOCUMENT_VISIT_DRAFT",
   "DOCUMENT_INDEX",
   "LABS_OCR_EXTRACT",
   "DOCUMENT_SUMMARY",
@@ -47,6 +48,7 @@ export const DOCUMENT_AI_RUN_CAPABILITY: Record<
   DocumentAiRunKindValue,
   AiCapabilityKey
 > = {
+  DOCUMENT_VISIT_DRAFT: "documentAi",
   DOCUMENT_INDEX: "documentAi",
   LABS_OCR_EXTRACT: "labsOcr",
   DOCUMENT_SUMMARY: "documentAi",
@@ -171,6 +173,7 @@ export interface SupplementLabelExtractRunResult {
 }
 
 export type AiRunResult =
+  | { documentId: string; draftReady: true }
   | DocumentIndexRunResult
   | OcrExtractResponseDto
   | DocumentSummaryRunResult

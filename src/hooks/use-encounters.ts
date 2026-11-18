@@ -50,6 +50,7 @@ export interface EncounterWriteBody {
   practitionerId?: string | null;
   reason?: string | null;
   outcome?: string | null;
+  clinical?: import("@/lib/validations/visit-extraction").VisitClinical | null;
   bodySite?: string | null;
   laterality?: "LEFT" | "RIGHT" | "BOTH" | null;
   /** The checkup this visit closes, when it was filed from a due one. */

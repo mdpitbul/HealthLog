@@ -47,6 +47,11 @@ export const AI_ROUTES: Readonly<Record<string, AiRouteEntry>> = {
     capabilities: ["documentAi"],
     why: "Indexes a document's content through a provider.",
   },
+  "src/app/api/documents/inbound/[id]/visit-draft/route.ts": {
+    kind: "action",
+    capabilities: ["documentAi"],
+    why: "Queues vision transcription into an encrypted visit review draft; confirmation is a separate non-AI write.",
+  },
   "src/app/api/documents/inbound/[id]/suggest/route.ts": {
     kind: "action",
     capabilities: ["documentAi"],

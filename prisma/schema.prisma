@@ -9191,6 +9191,7 @@ model InboundDocument {
   /// detour). Explicit column, never header-sniffed; the default keeps every
   /// pre-existing row correct.
   contentCodec         String                @default("base64v1") @map("content_codec")
+  visitDraftEncrypted  Bytes?                @map("visit_draft_encrypted")
   status               InboundDocumentStatus @default(STORED)
   /// Provider type that ran the extraction (e.g. "anthropic", "openai",
   /// "local"). Diagnostic only. Null on a store-only document.
@@ -9735,6 +9736,7 @@ model Encounter {
   /// in the wrong one, and the actionable half of a follow-up is not
   /// prose at all, it is the next appointment.
   outcomeEncrypted  Bytes?          @map("outcome_encrypted")
+  clinicalEncrypted Bytes?          @map("clinical_encrypted")
   /// Where on the body a procedure was done, in the person's own words
   /// ("knee", "gallbladder", "L4/L5"). Free text, because no picker covers
   /// everything a surgeon operates on, and a coded vocabulary the person
@@ -10181,6 +10183,7 @@ model OnboardingRecord {
 
 /// v1.40 — what a background document AI run is doing.
 enum DocumentAiRunKind {
+  DOCUMENT_VISIT_DRAFT
   /// "Read with AI": transcribe the stored original into the content index,
   /// then continue into lab staging.
   DOCUMENT_INDEX

@@ -159,6 +159,11 @@ export const PATCH = apiHandler(
           ? encryptToBytes(entry.reason)
           : null;
       }
+      if (entry.clinical !== undefined) {
+        data.clinicalEncrypted = entry.clinical
+          ? encryptToBytes(JSON.stringify(entry.clinical))
+          : null;
+      }
       if (entry.outcome !== undefined) {
         data.outcomeEncrypted = entry.outcome
           ? encryptToBytes(entry.outcome)

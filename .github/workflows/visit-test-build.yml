@@ -1,0 +1,39 @@
+name: Build isolated visit test image
+on:
+  push:
+    branches: [feature/doctor-visit-extraction]
+permissions:
+  contents: read
+concurrency:
+  group: visit-test-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-and-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.15.1 --activate
+          pnpm install --frozen-lockfile
+          pnpm db:generate
+      - name: Check types and visit regressions
+        run: |
+          pnpm typecheck
+          pnpm test visit-extraction.test.ts visit-draft/confirm/__tests__/route.test.ts documents/__tests__/visit-draft.test.ts visits-section.test.tsx encounter-form.test.tsx document-record-links.test.tsx encrypted-columns.test.ts ai-egress-capability-guard.test.ts ai-capability-route-inventory.test.ts visits-snapshot.test.ts
+      - name: Build a test image without publishing a release
+        run: |
+          docker build --build-arg NEXT_PUBLIC_APP_VERSION=1.47.6-visit-test --build-arg NEXT_PUBLIC_APP_BUILD_SHA="${GITHUB_SHA}" -t "healthlog:visit-test-${GITHUB_SHA}" .
+          docker save "healthlog:visit-test-${GITHUB_SHA}" | gzip -1 > /tmp/healthlog-visit-test.tar.gz
+      - name: Store the image for the isolated test server
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: visit-test-image
+          path: /tmp/healthlog-visit-test.tar.gz
+          retention-days: 3
+          compression-level: 0

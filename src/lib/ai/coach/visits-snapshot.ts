@@ -1,3 +1,4 @@
+import { readClinical } from "@/lib/encounters/clinical";
 /**
  * v1.38 — doctor-visit context block for the Coach snapshot.
  *
@@ -79,6 +80,7 @@ export interface CoachVisitsBlock {
 
 /** A row shape the two reads share. */
 interface EncounterRow {
+  clinicalEncrypted?: Uint8Array | null;
   occurredAt: Date;
   kind: string;
   reasonEncrypted: Uint8Array | null;
@@ -103,17 +105,35 @@ function decryptText(value: Uint8Array | null): string | null {
 
 function toEntry(row: EncounterRow): CoachVisitEntry {
   const bodySite = decryptText(row.bodySiteEncrypted ?? null);
+  const clinical = readClinical(row.clinicalEncrypted);
   return {
     occurredAt: row.occurredAt.toISOString(),
     kind: row.kind,
     practitioner: row.practitioner
       ? sanitizeForPrompt(row.practitioner.name, MAX_PRACTITIONER_CHARS)
-      : null,
+      : clinical?.doctor
+        ? sanitizeForPrompt(clinical.doctor, MAX_PRACTITIONER_CHARS)
+        : null,
     specialty: row.practitioner?.specialty
       ? sanitizeForPrompt(row.practitioner.specialty, MAX_PRACTITIONER_CHARS)
-      : null,
-    reason: decryptText(row.reasonEncrypted),
-    outcome: decryptText(row.outcomeEncrypted),
+      : clinical?.specialty
+        ? sanitizeForPrompt(clinical.specialty, MAX_PRACTITIONER_CHARS)
+        : null,
+    reason:
+      decryptText(row.reasonEncrypted) ??
+      (clinical?.complaints
+        ? sanitizeForPrompt(clinical.complaints, MAX_TEXT_CHARS)
+        : null),
+    outcome:
+      decryptText(row.outcomeEncrypted) ??
+      (clinical
+        ? sanitizeForPrompt(
+            [clinical.diagnoses, clinical.treatment, clinical.followUp]
+              .filter(Boolean)
+              .join("\n\n"),
+            MAX_TEXT_CHARS,
+          ) || null
+        : null),
     ...(bodySite
       ? { bodySite, ...(row.laterality ? { laterality: row.laterality } : {}) }
       : {}),

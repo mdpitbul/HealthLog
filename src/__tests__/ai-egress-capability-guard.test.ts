@@ -60,6 +60,11 @@ interface EgressSite {
  * Every file that calls a provider, and why the call is admitted.
  */
 const EGRESS_SITES: Record<string, EgressSite> = {
+  "lib/documents/visit-draft.ts": {
+    recheck: false,
+    reason:
+      "Only the DOCUMENT_VISIT_DRAFT worker calls this body, after pickForDocumentRead rechecks documentAi and consent for the selected vision provider.",
+  },
   // ── Chokepoints: re-check at the wire ──────────────────────────────────
   "lib/insights/status-provider.ts": {
     recheck: true,

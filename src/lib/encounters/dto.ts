@@ -11,6 +11,8 @@
  * key-rotation gap on one row reads as a missing reason, not as a 500 on the
  * whole list.
  */
+import type { VisitClinical } from "@/lib/validations/visit-extraction";
+import { readClinical } from "./clinical";
 import { decryptFromBytes } from "@/lib/ai/coach/bytes-codec";
 import { getEvent } from "@/lib/logging/context";
 import type {
@@ -60,6 +62,7 @@ export interface EncounterDTO {
   practitioner: PractitionerDTO | null;
   reason: string | null;
   outcome: string | null;
+  clinical?: VisitClinical | null;
   /**
    * Where on the body, decrypted. Carried on every kind, not only PROCEDURE,
    * so a visit switched away from PROCEDURE and back keeps what was typed.
@@ -108,7 +111,7 @@ export interface EncounterDTO {
 
 export function decryptField(
   value: Uint8Array | null,
-  field: "reason" | "outcome" | "bodySite",
+  field: "reason" | "outcome" | "bodySite" | "clinical",
 ): string | null {
   if (!value || value.byteLength === 0) return null;
   try {
@@ -141,6 +144,7 @@ export function toEncounterDTO(
     practitioner: row.practitioner ? toPractitionerDTO(row.practitioner) : null,
     reason: decryptField(row.reasonEncrypted, "reason"),
     outcome: decryptField(row.outcomeEncrypted, "outcome"),
+    clinical: readClinical(row.clinicalEncrypted),
     bodySite: decryptField(row.bodySiteEncrypted, "bodySite"),
     laterality: row.laterality,
     reminderNextDueAt: row.reminder?.nextDueAt?.toISOString() ?? null,

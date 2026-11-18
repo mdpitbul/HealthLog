@@ -819,6 +819,17 @@ async function main() {
     ),
   );
 
+  results.push(
+    await rotateBytesColumn("Encounter", "clinicalEncrypted", prisma.encounter),
+  );
+  results.push(
+    await rotateBytesColumn(
+      "InboundDocument",
+      "visitDraftEncrypted",
+      prisma.inboundDocument,
+    ),
+  );
+
   // ───── v1.39.4 workout GPS track (Bytes, binary2, batched) ─────
   // One sealed binary value per route, labelled for its purpose. Walked
   // through the registry so the binary codec and the label are honoured, in

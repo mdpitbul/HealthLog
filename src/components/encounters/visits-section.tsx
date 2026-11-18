@@ -29,6 +29,7 @@ import { useEncounters, type Encounter } from "@/hooks/use-encounters";
 import { apiGet } from "@/lib/api/api-fetch";
 import { useTranslations } from "@/lib/i18n/context";
 import { EncounterSheet } from "./encounter-sheet";
+import { VisitsTable } from "./visits-table";
 import { VisitCard } from "./visit-card";
 
 /** One visit by id, for a link to a visit older than the list reads. */
@@ -52,6 +53,7 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
   // `null` closed, `"new"` create, a row edits it.
   const [editing, setEditing] = useState<Encounter | "new" | null>(null);
   const [session, setSession] = useState(0);
+  const [table, setTable] = useState(false);
   const openSheet = (target: Encounter | "new") => {
     setEditing(target);
     setSession((n) => n + 1);
@@ -111,6 +113,29 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
         }
       />
 
+      {!empty && !list.isPending && !list.isError ? (
+        <div
+          role="group"
+          aria-label={t("visitExtraction.view")}
+          className="flex gap-2"
+        >
+          <Button
+            variant={table ? "outline" : "secondary"}
+            aria-pressed={!table}
+            onClick={() => setTable(false)}
+          >
+            {t("visitExtraction.cards")}
+          </Button>
+          <Button
+            variant={table ? "secondary" : "outline"}
+            aria-pressed={table}
+            onClick={() => setTable(true)}
+          >
+            {t("visitExtraction.table")}
+          </Button>
+        </div>
+      ) : null}
+
       {list.isError ? (
         <QueryErrorCard
           error={list.error}
@@ -165,13 +190,20 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
                 icon={History}
                 title={t("encounters.pastHeading")}
               />
-              {past.map((encounter) => (
-                <VisitCard
-                  key={encounter.id}
-                  encounter={encounter}
+              {table ? (
+                <VisitsTable
+                  visits={past}
                   onOpen={canManageVisits ? openSheet : undefined}
                 />
-              ))}
+              ) : (
+                past.map((encounter) => (
+                  <VisitCard
+                    key={encounter.id}
+                    encounter={encounter}
+                    onOpen={canManageVisits ? openSheet : undefined}
+                  />
+                ))
+              )}
             </div>
           ) : null}
         </div>

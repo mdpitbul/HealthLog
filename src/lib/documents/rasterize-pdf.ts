@@ -148,7 +148,7 @@ export const RASTER_TIMEOUT_PER_PAGE_MS = 5_000;
 export async function rasterizePdf(
   buffer: Buffer,
   maxPages: number = RASTER_MAX_PAGES,
-  opts: { withText?: boolean } = {},
+  opts: { withText?: boolean; highResolution?: boolean } = {},
 ): Promise<RasterResult> {
   // CPU-feature gate: pdfjs renders through @napi-rs/canvas (Skia), whose x64
   // build uses AVX2 — an unsupported CPU dies with SIGILL on the first
@@ -170,8 +170,9 @@ export async function rasterizePdf(
       data: buffer,
       options: {
         maxPages: cap,
-        targetLongEdge: RASTER_TARGET_LONG_EDGE,
-        jpegQuality: RASTER_JPEG_QUALITY,
+        targetLongEdge: opts.highResolution ? 3200 : RASTER_TARGET_LONG_EDGE,
+        allowUpscale: opts.highResolution === true,
+        jpegQuality: opts.highResolution ? 95 : RASTER_JPEG_QUALITY,
         minInkRatio: RASTER_MIN_INK_RATIO,
         withText: opts.withText === true,
       },

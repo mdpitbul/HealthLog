@@ -220,6 +220,9 @@ async function postEncounter(request: NextRequest): Promise<Response> {
         practitionerId: practitioner?.id ?? null,
         reasonEncrypted: entry.reason ? encryptToBytes(entry.reason) : null,
         outcomeEncrypted: entry.outcome ? encryptToBytes(entry.outcome) : null,
+        clinicalEncrypted: entry.clinical
+          ? encryptToBytes(JSON.stringify(entry.clinical))
+          : null,
         bodySiteEncrypted: entry.bodySite?.trim()
           ? encryptToBytes(entry.bodySite.trim())
           : null,

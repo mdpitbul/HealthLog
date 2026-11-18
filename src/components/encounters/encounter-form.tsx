@@ -23,11 +23,14 @@
  * there.
  */
 import { useMemo, useState } from "react";
+import { VisitClinicalFields } from "./visit-clinical-fields";
+import type { VisitClinical } from "@/lib/validations/visit-extraction";
 
 import { Button } from "@/components/ui/button";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { FieldGroup } from "@/components/ui/field-group";
 import { NativeSelect } from "@/components/ui/native-select";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslations } from "@/lib/i18n/context";
@@ -52,6 +55,7 @@ export interface EncounterDraft {
   practitioner: Practitioner | null;
   reason: string;
   outcome: string;
+  clinical?: VisitClinical | null;
   /** Where on the body; free text, empty when not stated. */
   bodySite: string;
   laterality: "LEFT" | "RIGHT" | "BOTH" | null;
@@ -111,6 +115,7 @@ export function draftFromEncounter(row: Encounter): EncounterDraft {
     practitioner: row.practitioner,
     reason: row.reason ?? "",
     outcome: row.outcome ?? "",
+    clinical: row.clinical ?? null,
     bodySite: row.bodySite ?? "",
     laterality: row.laterality,
     documentIds: row.links?.documents.map((link) => link.id) ?? [],
@@ -148,6 +153,7 @@ export function draftToBody(
     practitionerId: draft.practitioner?.id ?? null,
     reason: draft.reason.trim() || null,
     outcome: draft.outcome.trim() || null,
+    ...(draft.clinical !== undefined ? { clinical: draft.clinical } : {}),
     bodySite: draft.bodySite.trim() || null,
     laterality: draft.laterality,
     ...(options.reminderId ? { reminderId: options.reminderId } : {}),
@@ -203,14 +209,26 @@ export function EncounterForm({
         label={t("encounters.form.date")}
         hint={isEdit ? undefined : t("encounters.form.dateDerivesStatusHint")}
       >
-        <DateTimeField
-          id="encounter-occurred-at"
-          value={draft.occurredAt}
-          onChange={(value) => patch({ occurredAt: value })}
-          required
-          aria-required="true"
-          data-testid="encounter-occurred-at"
-        />
+        {draft.clinical?.dateOnly ? (
+          <Input
+            id="encounter-occurred-at"
+            type="date"
+            value={draft.occurredAt.slice(0, 10)}
+            onChange={(event) =>
+              patch({ occurredAt: `${event.target.value}T12:00` })
+            }
+            required
+          />
+        ) : (
+          <DateTimeField
+            id="encounter-occurred-at"
+            value={draft.occurredAt}
+            onChange={(value) => patch({ occurredAt: value })}
+            required
+            aria-required="true"
+            data-testid="encounter-occurred-at"
+          />
+        )}
       </FieldGroup>
 
       {isEdit ? (
@@ -308,6 +326,13 @@ export function EncounterForm({
           {t("encounters.form.outcomeReveal")}
         </Button>
       )}
+
+      {draft.clinical ? (
+        <VisitClinicalFields
+          value={draft.clinical}
+          onChange={(clinical) => patch({ clinical })}
+        />
+      ) : null}
 
       <EncounterLinkPickers
         modules={user?.modules}

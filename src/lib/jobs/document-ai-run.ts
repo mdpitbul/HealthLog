@@ -589,6 +589,23 @@ async function runDocumentExtractRead(
   };
 }
 
+async function runDocumentVisitDraft(
+  run: ClaimedAiRun,
+  deadlineAt: number | undefined,
+  now: () => number,
+): Promise<AiRunOutcome<AiRunResult>> {
+  const document = await loadRunDocument(run);
+  const read = await pickForDocumentRead(run, 1, deadlineAt, now);
+  if (read.mode !== "vision") throw new Error("Visit extraction needs vision");
+  const { executeVisitDraft } = await import("@/lib/documents/visit-draft");
+  return executeVisitDraft({
+    userId: run.userId,
+    document,
+    pick: read.pick,
+    budget: runBudget(run),
+  });
+}
+
 type RunDispatcher = (
   run: ClaimedAiRun,
   deadlineAt: number | undefined,
@@ -601,6 +618,7 @@ type RunDispatcher = (
  * (`assertRunMayEgress`); `ai-egress-capability-guard.test.ts` holds that.
  */
 const RUN_DISPATCH: Record<DocumentAiRunKindValue, RunDispatcher> = {
+  DOCUMENT_VISIT_DRAFT: runDocumentVisitDraft,
   DOCUMENT_INDEX: runDocumentIndex,
   LABS_OCR_EXTRACT: runLabsOcr,
   DOCUMENT_SUMMARY: runDocumentSummaryRead,
