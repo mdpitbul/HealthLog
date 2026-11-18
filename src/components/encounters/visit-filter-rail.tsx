@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { Search, X } from "lucide-react";
 import { FilterBar, FilterBarDateRange } from "@/components/ui/filter-bar";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ export function VisitFilterRail({
   enabled,
 }: {
   value: VisitFilters;
-  onChange: (value: VisitFilters) => void;
+  onChange: Dispatch<SetStateAction<VisitFilters>>;
   count: number;
   enabled: boolean;
 }) {
@@ -51,7 +51,10 @@ export function VisitFilterRail({
           ref={input}
           type="search"
           value={value.search}
-          onChange={(e) => onChange({ ...value, search: e.target.value })}
+          onChange={(e) => {
+            const search = e.target.value;
+            onChange((current) => ({ ...current, search }));
+          }}
           placeholder={t("visitExtraction.search")}
           aria-label={t("visitExtraction.search")}
           aria-keyshortcuts="/"
@@ -61,7 +64,7 @@ export function VisitFilterRail({
           <button
             type="button"
             onClick={() => {
-              onChange({ ...value, search: "" });
+              onChange((current) => ({ ...current, search: "" }));
               input.current?.focus();
             }}
             aria-label={t("labs.filter.clearSearch")}
@@ -89,8 +92,10 @@ export function VisitFilterRail({
             label={t("visitExtraction.fields.date")}
             from={value.from}
             to={value.to}
-            onFromChange={(from) => onChange({ ...value, from })}
-            onToChange={(to) => onChange({ ...value, to })}
+            onFromChange={(from) =>
+              onChange((current) => ({ ...current, from }))
+            }
+            onToChange={(to) => onChange((current) => ({ ...current, to }))}
             idPrefix="visits-filter-date"
           />
         </FilterBar>
