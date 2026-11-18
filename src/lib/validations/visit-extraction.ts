@@ -16,10 +16,11 @@ export const visitClinicalSchema = z
     doctor: z.string().max(300),
     specialty: z.string().max(300),
     clinic: z.string().max(500),
-    complaints: text,
+    complaints: text.optional(),
     diagnoses: text,
-    treatment: text,
-    followUp: text,
+    treatment: text.optional(),
+    examinations: text.optional(),
+    followUp: text.optional(),
   })
   .strict();
 export type VisitClinical = z.infer<typeof visitClinicalSchema>;
@@ -44,6 +45,7 @@ export type VisitExtraction = z.infer<typeof visitExtractionSchema>;
 export interface VisitDraft {
   version: string;
   generatedAt: string;
+  notesVersion?: 2;
   model: string;
   pageCount: number;
   pagesRead: number;
@@ -55,6 +57,8 @@ export const confirmVisitDraftSchema = z
     version: z.string().uuid(),
     date: visitDate,
     clinical: visitClinicalSchema,
+    reason: z.string().max(6000).nullable().optional(),
+    outcome: z.string().max(20000).nullable().optional(),
     encounterId: z.string().min(1).max(40).nullable(),
     expectedUpdatedAt: isoDateTime().nullable(),
   })

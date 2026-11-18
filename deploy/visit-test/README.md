@@ -3,7 +3,7 @@
 This stack starts an unchanged v1.47.6 baseline for developing document-to-visit
 extraction. The application commit is
 `93f68915dbb3a9d10f13981b6e1eb3c0590a7123`; the published image is pinned by digest.
-The visit-extraction feature is not implemented yet.
+The fork image overrides this baseline through `HEALTHLOG_TEST_IMAGE`.
 
 ## Isolation
 
@@ -68,9 +68,9 @@ excerpts and uncertain fragments. The first four pages are rendered at 3200 px
 (JPEG 95); a longer document displays an explicit partial-read notice.
 
 Confirmation creates the visit and source link in one transaction. Replaying
-confirmation returns the same visit. Choosing an existing visit replaces only
-the reviewed clinical block, with an optimistic updatedAt check; manual notes,
-date and other links survive. Illness episodes and medication records remain
+confirmation returns the same visit. Choosing an existing visit replaces the reviewed clinical metadata and appends
+the reviewed reason and outcome without discarding manual notes, with an optimistic
+updatedAt check; the date and other links survive. Illness episodes and medication records remain
 manual and are never inferred or merged from a diagnosis.
 
 The clinical block and document draft use nullable encrypted columns on the
@@ -95,3 +95,22 @@ per-user response-time setting still taking precedence. The background run's
 deadline follows the same effective timeout. Failures retain the prior draft;
 timeouts use the translated timeout error, and diagnostics record only stage,
 elapsed time and schema field names, never clinical text or provider messages.
+
+## Native visit notes and browsing
+
+Complaints populate the native reason field. The native outcome combines the
+prescribed treatment, recommended examinations and follow-up in separate nonempty
+sections. Section labels follow the interface language; document wording stays
+unchanged and requires review before saving. Doctor, specialty, clinic and diagnoses
+remain clinical metadata. Practitioner cards are not created automatically.
+
+Legacy clinical notes remain readable through a compatibility fallback, without
+rewriting saved records in bulk. Editing a visit through the form stores its notes
+in the native fields and removes duplicate legacy note fields. Explicitly clearing
+a native note also removes its legacy fallback. Deleting a previously confirmed
+visit releases its document draft for another read or confirmation; the PDF remains.
+
+Visit search covers doctor, specialty, clinic, diagnoses, reason and outcome.
+The shared lab-style date filter includes both boundary dates in the profile's
+timezone. Search and dates combine, preserve list ordering, and clear through their
+own controls. No extra reset button or categorical dropdowns are added.

@@ -1,3 +1,12 @@
+import { readClinical } from "@/lib/encounters/clinical";
+import { decryptFromBytes } from "@/lib/ai/coach/bytes-codec";
+import {
+  clinicalDetails,
+  visitNotes,
+  appendVisitNote,
+  VISIT_REASON_MAX,
+  VISIT_OUTCOME_MAX,
+} from "@/lib/encounters/visit-notes";
 import type { NextRequest } from "next/server";
 import { apiHandler, requireAuth } from "@/lib/api-handler";
 import { apiError, apiSuccess } from "@/lib/api-response";
@@ -20,7 +29,7 @@ export const POST = apiHandler(
     if (!gate.enabled) return gate.response;
     const { id } = await params;
     const parsed = await parseJsonBody(request, confirmVisitDraftSchema, {
-      maxBytes: 48 * 1024,
+      maxBytes: 256 * 1024,
       errorCode: "encounter.invalid",
       action: "documents.visit.confirm.invalid",
     });
@@ -48,24 +57,41 @@ export const POST = apiHandler(
             deletedAt: null,
           },
         });
-        if (!saved)
-          return {
-            error: "The saved visit was removed. Restore it before continuing.",
-            status: 409,
-          } as const;
-        return { encounterId: saved.id };
+        if (saved) return { encounterId: saved.id };
       }
+      const incoming = visitNotes(entry.reason, entry.outcome, entry.clinical);
+      const details = clinicalDetails(entry.clinical);
       const clinicalEncrypted = encryptToBytes(
         JSON.stringify(
-          entry.encounterId
-            ? entry.clinical
-            : { ...entry.clinical, dateOnly: true },
+          entry.encounterId ? details : { ...details, dateOnly: true },
         ),
       );
       let encounterId: string;
       if (entry.encounterId) {
-        // All existing manual fields and other attachments survive. Only the
-        // clinical block shown in the review is replaced on explicit confirmation.
+        const current = await tx.encounter.findFirst({
+          where: { id: entry.encounterId, userId: user.id, deletedAt: null },
+        });
+        if (!current) return { error: "Visit not found", status: 404 } as const;
+        const prior = visitNotes(
+          current.reasonEncrypted
+            ? decryptFromBytes(current.reasonEncrypted)
+            : null,
+          current.outcomeEncrypted
+            ? decryptFromBytes(current.outcomeEncrypted)
+            : null,
+          readClinical(current.clinicalEncrypted),
+        );
+        const reason = appendVisitNote(prior.reason, incoming.reason);
+        const outcome = appendVisitNote(prior.outcome, incoming.outcome);
+        if (
+          (reason?.length ?? 0) > VISIT_REASON_MAX ||
+          (outcome?.length ?? 0) > VISIT_OUTCOME_MAX
+        )
+          return {
+            error:
+              "Combined visit notes are too long. Edit the existing visit before adding more notes.",
+            status: 422,
+          } as const;
         const count = await tx.encounter.updateMany({
           where: {
             id: entry.encounterId,
@@ -75,7 +101,11 @@ export const POST = apiHandler(
               ? new Date(entry.expectedUpdatedAt)
               : new Date(0),
           },
-          data: { clinicalEncrypted },
+          data: {
+            clinicalEncrypted,
+            reasonEncrypted: reason ? encryptToBytes(reason) : null,
+            outcomeEncrypted: outcome ? encryptToBytes(outcome) : null,
+          },
         });
         if (count.count !== 1)
           return {
@@ -101,6 +131,12 @@ export const POST = apiHandler(
             status: "DONE",
             kind: "OTHER",
             clinicalEncrypted,
+            reasonEncrypted: incoming.reason
+              ? encryptToBytes(incoming.reason)
+              : null,
+            outcomeEncrypted: incoming.outcome
+              ? encryptToBytes(incoming.outcome)
+              : null,
           },
         });
         encounterId = visit.id;

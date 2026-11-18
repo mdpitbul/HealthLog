@@ -1,3 +1,5 @@
+import { visitNotes } from "@/lib/encounters/visit-notes";
+import { readClinical } from "@/lib/encounters/clinical";
 import { z } from "zod/v4";
 
 import { prisma } from "@/lib/db";
@@ -36,6 +38,7 @@ const getVisitsOutput: z.ZodRawShape = {
         practitioner: z.string().nullable(),
         specialty: z.string().nullable(),
         reason: z.string().nullable(),
+        diagnoses: z.string().optional(),
         outcome: z.string().nullable(),
         bodySite: z.string().nullable(),
         laterality: z.enum(["LEFT", "RIGHT", "BOTH"]).nullable(),
@@ -162,8 +165,12 @@ export const getVisitsTool: McpToolDefinition = {
       : new Map<string, Array<{ label: string }>>();
 
     const visits = rows.map((r) => {
-      const reason = decryptVisitText(r.reasonEncrypted);
-      const outcome = decryptVisitText(r.outcomeEncrypted);
+      const clinical = readClinical(r.clinicalEncrypted);
+      const { reason, outcome } = visitNotes(
+        decryptVisitText(r.reasonEncrypted),
+        decryptVisitText(r.outcomeEncrypted),
+        clinical,
+      );
       const bodySite = decryptVisitText(r.bodySiteEncrypted);
       // A live visit names its practitioner even after the address-book
       // entry is deleted, as the web record does.
@@ -182,6 +189,9 @@ export const getVisitsTool: McpToolDefinition = {
         // content they wrap. A condition label is the user's own free text
         // too — scrubbed of any forged marker before it enters the payload.
         reason: reason !== null ? fenceUserText(reason) : null,
+        ...(clinical?.diagnoses
+          ? { diagnoses: fenceUserText(clinical.diagnoses) }
+          : {}),
         outcome: outcome !== null ? fenceUserText(outcome) : null,
         bodySite: bodySite !== null ? fenceUserText(bodySite) : null,
         laterality: r.laterality,

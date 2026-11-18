@@ -14444,7 +14444,7 @@
     "page": "Page {page}",
     "destination": "Enregistrer dans",
     "newVisit": "Créer une nouvelle consultation",
-    "existingNote": "Les informations cliniques vérifiées remplaceront le bloc clinique précédent. La date, les notes manuelles et les autres liens seront conservés.",
+    "existingNote": "Le motif et le résultat vérifiés seront ajoutés aux notes existantes. Les données cliniques remplaceront le bloc précédent ; la date et les autres liens seront conservés.",
     "existingDetails": "Informations cliniques actuelles",
     "targetFailed": "Impossible de charger la liste ou la consultation choisie. Réessayez avant de sélectionner une consultation existante.",
     "reviewed": "J’ai vérifié la date, les noms, les diagnostics et les prescriptions avec l’original.",
@@ -14465,6 +14465,14 @@
       "treatment": "Traitement prescrit",
       "followUp": "Suites à donner",
       "source": "Document original"
-    }
+    },
+    "headings": {
+      "treatment": "Traitement",
+      "examinations": "Examens",
+      "control": "Suivi"
+    },
+    "search": "Rechercher des consultations",
+    "count": "Consultations : {count}",
+    "emptyFiltered": "Aucune consultation ne correspond à la recherche et aux dates."
   }
 }

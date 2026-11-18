@@ -181,7 +181,7 @@ async function postEncounter(request: NextRequest): Promise<Response> {
   const { user, grantId } = await requireRecordAuth("write", "profile");
 
   const parsed = await parseJsonBody(request, encounterCreateSchema, {
-    maxBytes: 32 * 1024,
+    maxBytes: 256 * 1024,
     action: "encounter.visit.validation-failed",
     countIssues: true,
     errorCode: "encounter.invalid",

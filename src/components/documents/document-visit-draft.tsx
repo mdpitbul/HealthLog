@@ -11,6 +11,12 @@ import { Input } from "@/components/ui/input";
 import { FieldGroup } from "@/components/ui/field-group";
 import { NativeSelect } from "@/components/ui/native-select";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import {
+  clinicalDetails,
+  sectionedOutcome,
+  visitNotes,
+} from "@/lib/encounters/visit-notes";
+import { VisitNoteFields } from "@/components/encounters/visit-note-fields";
 import { VisitClinicalFields } from "@/components/encounters/visit-clinical-fields";
 import { InlinePreview } from "./detail/original-file";
 import { apiGet, apiPost } from "@/lib/api/api-fetch";
@@ -173,7 +179,19 @@ function ReviewDraft({
   const format = useFormatters();
   const client = useQueryClient();
   const [date, setDate] = useState(draft.extraction.date ?? "");
-  const [clinical, setClinical] = useState(draft.extraction.clinical);
+  const original = draft.extraction.clinical;
+  const notes = visitNotes(null, null, original);
+  const [clinical, setClinical] = useState(clinicalDetails(original));
+  const [reason, setReason] = useState(notes.reason ?? "");
+  const [outcome, setOutcome] = useState(
+    draft.notesVersion === 2
+      ? sectionedOutcome(original, {
+          treatment: t("visitExtraction.headings.treatment"),
+          examinations: t("visitExtraction.headings.examinations"),
+          followUp: t("visitExtraction.headings.control"),
+        })
+      : (notes.outcome ?? ""),
+  );
   const [target, setTarget] = useState<EncounterDTO | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [targetError, setTargetError] = useState<Error | null>(null);
@@ -183,6 +201,8 @@ function ReviewDraft({
     mutationFn: () =>
       apiPost<{ encounterId: string }>(`${endpoint}/confirm`, {
         version: draft.version,
+        reason,
+        outcome,
         date: target ? target.occurredAt.slice(0, 10) : date,
         clinical: {
           ...clinical,
@@ -241,24 +261,7 @@ function ReviewDraft({
         if (reviewed && !targetError) save.mutate();
       }}
     >
-      {draft.pagesRead < draft.pageCount ? (
-        <p role="alert" className="text-destructive">
-          {t("visitExtraction.partial", {
-            read: draft.pagesRead,
-            total: draft.pageCount,
-          })}
-        </p>
-      ) : null}
-      {draft.extraction.uncertainties.length ? (
-        <div className="border-border rounded-lg border p-3">
-          <p className="font-medium">{t("visitExtraction.uncertain")}</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-            {draft.extraction.uncertainties.map((text, i) => (
-              <li key={i}>{text}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <DraftWarnings draft={draft} />
       <div className="grid min-w-0 gap-6 md:grid-cols-2">
         <ReviewSource
           draft={draft}
@@ -319,37 +322,28 @@ function ReviewDraft({
               setReviewed(false);
             }}
           />
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="mt-1 size-4 shrink-0"
-              checked={reviewed}
-              onChange={(e) => setReviewed(e.target.checked)}
-            />
-            {t("visitExtraction.reviewed")}
-          </label>
-          {save.isError ? (
-            <p role="alert" className="text-destructive text-sm">
-              {t("visitExtraction.saveFailed")} {save.error.message}
-            </p>
-          ) : null}
-          <Button
-            type="submit"
-            className="min-h-11"
-            disabled={
-              !reviewed ||
-              save.isPending ||
-              targetPending ||
-              !!targetError ||
-              !(target || date)
-            }
-          >
-            {save.isPending
-              ? t("visitExtraction.saving")
-              : target
-                ? t("visitExtraction.updateVisit")
-                : t("visitExtraction.save")}
-          </Button>
+          <VisitNoteFields
+            reason={reason}
+            outcome={outcome}
+            onReason={(text) => {
+              setReason(text);
+              onDirty(true);
+              setReviewed(false);
+            }}
+            onOutcome={(text) => {
+              setOutcome(text);
+              onDirty(true);
+              setReviewed(false);
+            }}
+          />
+          <ReviewSaveControls
+            reviewed={reviewed}
+            onReviewed={setReviewed}
+            pending={save.isPending}
+            error={save.error}
+            existing={!!target}
+            canSave={!targetPending && !targetError && !!(target || date)}
+          />
         </div>
       </div>
     </form>
@@ -397,18 +391,18 @@ function ExistingClinicalBlock({ target }: { target: EncounterDTO }) {
   return (
     <div className="bg-muted rounded-lg p-3 text-sm">
       <p>{t("visitExtraction.existingNote")}</p>
-      {clinical ? (
+      {clinical || target.reason || target.outcome ? (
         <details className="mt-2">
           <summary>{t("visitExtraction.existingDetails")}</summary>
           <pre className="mt-2 font-sans whitespace-pre-wrap">
             {[
-              clinical.doctor,
-              clinical.specialty,
-              clinical.clinic,
-              clinical.complaints,
-              clinical.diagnoses,
-              clinical.treatment,
-              clinical.followUp,
+              target.reason,
+              target.outcome,
+              clinical?.doctor,
+              clinical?.specialty,
+              clinical?.clinic,
+
+              clinical?.diagnoses,
             ]
               .filter(Boolean)
               .join("\n\n")}
@@ -444,5 +438,78 @@ function VisitDraftDateField({
         onChange={(e) => onChange(e.target.value)}
       />
     </FieldGroup>
+  );
+}
+
+function ReviewSaveControls({
+  reviewed,
+  onReviewed,
+  pending,
+  error,
+  existing,
+  canSave,
+}: {
+  reviewed: boolean;
+  onReviewed: (value: boolean) => void;
+  pending: boolean;
+  error: Error | null;
+  existing: boolean;
+  canSave: boolean;
+}) {
+  const { t } = useTranslations();
+  return (
+    <>
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="mt-1 size-4 shrink-0"
+          checked={reviewed}
+          onChange={(e) => onReviewed(e.target.checked)}
+        />
+        {t("visitExtraction.reviewed")}
+      </label>
+      {error ? (
+        <p role="alert" className="text-destructive text-sm">
+          {t("visitExtraction.saveFailed")} {error.message}
+        </p>
+      ) : null}
+      <Button
+        type="submit"
+        className="min-h-11"
+        disabled={!reviewed || pending || !canSave}
+      >
+        {pending
+          ? t("visitExtraction.saving")
+          : existing
+            ? t("visitExtraction.updateVisit")
+            : t("visitExtraction.save")}
+      </Button>
+    </>
+  );
+}
+
+function DraftWarnings({ draft }: { draft: VisitDraft }) {
+  const { t } = useTranslations();
+  return (
+    <>
+      {draft.pagesRead < draft.pageCount ? (
+        <p role="alert" className="text-destructive">
+          {t("visitExtraction.partial", {
+            read: draft.pagesRead,
+            total: draft.pageCount,
+          })}
+        </p>
+      ) : null}
+      {draft.extraction.uncertainties.length ? (
+        <div className="border-border rounded-lg border p-3">
+          <p className="font-medium">{t("visitExtraction.uncertain")}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+            {draft.extraction.uncertainties.map((text, i) => (
+              <li key={i}>{text}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </>
   );
 }

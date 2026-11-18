@@ -1,3 +1,4 @@
+import { visitNotes } from "./visit-notes";
 /**
  * Encounter row → wire DTO.
  *
@@ -136,15 +137,20 @@ export function toEncounterDTO(
   links?: EncounterLinksDTO,
   skipped?: RestoreSkipSummary,
 ): EncounterDTO {
+  const clinical = readClinical(row.clinicalEncrypted);
+  const notes = visitNotes(
+    decryptField(row.reasonEncrypted, "reason"),
+    decryptField(row.outcomeEncrypted, "outcome"),
+    clinical,
+  );
   return {
     id: row.id,
     occurredAt: row.occurredAt.toISOString(),
     status: row.status,
     kind: row.kind,
     practitioner: row.practitioner ? toPractitionerDTO(row.practitioner) : null,
-    reason: decryptField(row.reasonEncrypted, "reason"),
-    outcome: decryptField(row.outcomeEncrypted, "outcome"),
-    clinical: readClinical(row.clinicalEncrypted),
+    ...notes,
+    clinical,
     bodySite: decryptField(row.bodySiteEncrypted, "bodySite"),
     laterality: row.laterality,
     reminderNextDueAt: row.reminder?.nextDueAt?.toISOString() ?? null,

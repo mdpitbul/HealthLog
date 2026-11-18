@@ -8,10 +8,7 @@ export const CLINICAL_FIELDS = [
   "doctor",
   "specialty",
   "clinic",
-  "complaints",
   "diagnoses",
-  "treatment",
-  "followUp",
 ] as const;
 export function VisitClinicalFields({
   value,
@@ -39,7 +36,7 @@ export function VisitClinicalFields({
           ) : (
             <Textarea
               id={`visit-clinical-${field}`}
-              rows={field === "treatment" ? 5 : 3}
+              rows={3}
               value={value[field]}
               maxLength={6000}
               onChange={(e) => onChange({ ...value, [field]: e.target.value })}

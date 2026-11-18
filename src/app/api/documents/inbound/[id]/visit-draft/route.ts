@@ -1,3 +1,4 @@
+import { hasSavedVisit } from "@/lib/documents/visit-draft-saved";
 import { VISIT_DRAFT_MAX_TOKENS } from "@/lib/documents/visit-draft-config";
 import type { NextRequest } from "next/server";
 import { apiHandler, requireAuth } from "@/lib/api-handler";
@@ -39,8 +40,15 @@ export const GET = apiHandler(
       id,
       "DOCUMENT_VISIT_DRAFT",
     );
+    const draft = readVisitDraft(doc.visitDraftEncrypted);
+    const saved = await hasSavedVisit(prisma, user.id, draft);
     return apiSuccess({
-      draft: readVisitDraft(doc.visitDraftEncrypted),
+      draft: draft
+        ? {
+            ...draft,
+            savedEncounterId: saved ? draft.savedEncounterId : undefined,
+          }
+        : null,
       runId,
     });
   },
@@ -58,7 +66,13 @@ export const POST = apiHandler(
       where: { id },
       select: { visitDraftEncrypted: true },
     });
-    if (readVisitDraft(existing.visitDraftEncrypted)?.savedEncounterId)
+    if (
+      await hasSavedVisit(
+        prisma,
+        user.id,
+        readVisitDraft(existing.visitDraftEncrypted),
+      )
+    )
       return apiError(
         "This draft has already been saved. Edit the linked visit.",
         409,

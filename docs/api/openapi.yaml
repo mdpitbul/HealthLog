@@ -21020,9 +21020,10 @@ paths:
         - Documents
       summary: Confirm reviewed visit fields and attach the source
       description: Owner-only, no model work. Version-checked transaction creates one encounter and document link. Replaying
-        the same confirmed version returns its existing encounterId. Selecting an owned encounter replaces only its
-        clinical block, preserving manual fields/date/links and checking expectedUpdatedAt. No disease or medication
-        records are created.
+        the same confirmed version returns its existing encounterId. Selecting an owned encounter appends reviewed
+        reason/outcome text without discarding existing manual notes, replaces the reviewed clinical details and checks
+        expectedUpdatedAt. Deleted visits release the document for a new review. No disease or medication records are
+        created.
       parameters:
         - *a51
       requestBody:
@@ -21064,6 +21065,9 @@ paths:
                     treatment:
                       type: string
                       maxLength: 6000
+                    examinations:
+                      type: string
+                      maxLength: 6000
                     followUp:
                       type: string
                       maxLength: 6000
@@ -21071,11 +21075,18 @@ paths:
                     - doctor
                     - specialty
                     - clinic
-                    - complaints
                     - diagnoses
-                    - treatment
-                    - followUp
                   additionalProperties: false
+                reason:
+                  anyOf:
+                    - type: string
+                      maxLength: 6000
+                    - type: "null"
+                outcome:
+                  anyOf:
+                    - type: string
+                      maxLength: 20000
+                    - type: "null"
                 encounterId:
                   anyOf:
                     - type: string
@@ -35604,12 +35615,12 @@ components:
         reason:
           anyOf:
             - type: string
-              maxLength: 2000
+              maxLength: 6000
             - type: "null"
         outcome:
           anyOf:
             - type: string
-              maxLength: 4000
+              maxLength: 20000
             - type: "null"
         clinical:
           anyOf:
@@ -35636,6 +35647,9 @@ components:
                 treatment:
                   type: string
                   maxLength: 6000
+                examinations:
+                  type: string
+                  maxLength: 6000
                 followUp:
                   type: string
                   maxLength: 6000
@@ -35643,10 +35657,7 @@ components:
                 - doctor
                 - specialty
                 - clinic
-                - complaints
                 - diagnoses
-                - treatment
-                - followUp
               additionalProperties: false
             - type: "null"
         bodySite:
@@ -35733,12 +35744,12 @@ components:
         reason:
           anyOf:
             - type: string
-              maxLength: 2000
+              maxLength: 6000
             - type: "null"
         outcome:
           anyOf:
             - type: string
-              maxLength: 4000
+              maxLength: 20000
             - type: "null"
         clinical:
           anyOf:
@@ -35765,6 +35776,9 @@ components:
                 treatment:
                   type: string
                   maxLength: 6000
+                examinations:
+                  type: string
+                  maxLength: 6000
                 followUp:
                   type: string
                   maxLength: 6000
@@ -35772,10 +35786,7 @@ components:
                 - doctor
                 - specialty
                 - clinic
-                - complaints
                 - diagnoses
-                - treatment
-                - followUp
               additionalProperties: false
             - type: "null"
         bodySite:
@@ -79433,6 +79444,9 @@ components:
                 treatment:
                   type: string
                   maxLength: 6000
+                examinations:
+                  type: string
+                  maxLength: 6000
                 followUp:
                   type: string
                   maxLength: 6000
@@ -79440,10 +79454,7 @@ components:
                 - doctor
                 - specialty
                 - clinic
-                - complaints
                 - diagnoses
-                - treatment
-                - followUp
               additionalProperties: false
             - type: "null"
         bodySite:
@@ -83866,6 +83877,9 @@ components:
                             treatment:
                               type: string
                               maxLength: 6000
+                            examinations:
+                              type: string
+                              maxLength: 6000
                             followUp:
                               type: string
                               maxLength: 6000
@@ -83873,10 +83887,7 @@ components:
                             - doctor
                             - specialty
                             - clinic
-                            - complaints
                             - diagnoses
-                            - treatment
-                            - followUp
                           additionalProperties: false
                         uncertainties:
                           maxItems: 40

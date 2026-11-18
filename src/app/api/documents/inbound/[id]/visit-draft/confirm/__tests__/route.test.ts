@@ -18,7 +18,8 @@ vi.mock("@/lib/modules/gate", () => ({ requireModuleEnabled: mocks.gate }));
 vi.mock("@/lib/auth/audit", () => ({ auditLog: mocks.audit }));
 vi.mock("@/lib/documents/visit-draft", () => ({ readVisitDraft: mocks.read }));
 import { POST } from "../route";
-import { decryptFromBytes } from "@/lib/ai/coach/bytes-codec";
+import { clinicalDetails } from "@/lib/encounters/visit-notes";
+import { encryptToBytes, decryptFromBytes } from "@/lib/ai/coach/bytes-codec";
 const clinical = {
   doctor: "Test clinician",
   specialty: "",
@@ -101,9 +102,13 @@ describe("confirm visit draft", () => {
     const data = tx.encounter.create.mock.calls[0][0].data;
     expect(data.userId).toBe("owner-1");
     expect(JSON.parse(decryptFromBytes(data.clinicalEncrypted))).toEqual({
-      ...clinical,
+      ...clinicalDetails(clinical),
       dateOnly: true,
     });
+    expect(decryptFromBytes(data.reasonEncrypted)).toBe(clinical.complaints);
+    expect(decryptFromBytes(data.outcomeEncrypted)).toBe(
+      `${clinical.treatment}\n\n${clinical.followUp}`,
+    );
     // Noon on the stated day in the record's zone, not the server zone.
     expect(data.occurredAt.toISOString()).toBe("2024-02-28T22:00:00.000Z");
     expect(tx.encounterDocumentLink.upsert).toHaveBeenCalledWith(
@@ -135,7 +140,13 @@ describe("confirm visit draft", () => {
     expect((await call()).status).toBe(404);
     expect(tx.encounter.create).not.toHaveBeenCalled();
   });
-  it("updates only the reviewed clinical block and preserves manual visit fields", async () => {
+  it("adds reviewed notes without losing manual visit notes or other fields", async () => {
+    tx.encounter.findFirst.mockResolvedValue({
+      id: "existing-1",
+      reasonEncrypted: encryptToBytes("Manual reason"),
+      outcomeEncrypted: encryptToBytes("Manual outcome"),
+      clinicalEncrypted: null,
+    });
     expect(
       (
         await call(
@@ -147,7 +158,17 @@ describe("confirm visit draft", () => {
       ).status,
     ).toBe(200);
     const write = tx.encounter.updateMany.mock.calls[0][0];
-    expect(Object.keys(write.data)).toEqual(["clinicalEncrypted"]);
+    expect(Object.keys(write.data).sort()).toEqual([
+      "clinicalEncrypted",
+      "outcomeEncrypted",
+      "reasonEncrypted",
+    ]);
+    expect(decryptFromBytes(write.data.reasonEncrypted)).toBe(
+      `Manual reason\n\n${clinical.complaints}`,
+    );
+    expect(decryptFromBytes(write.data.outcomeEncrypted)).toContain(
+      "Manual outcome\n\n",
+    );
     expect(write.where).toEqual({
       id: "existing-1",
       userId: "owner-1",
@@ -175,4 +196,13 @@ describe("confirm visit draft", () => {
     expect((await call(payload({ date: "2024-02-30" }))).status).toBe(422);
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
+});
+
+it("allows a new visit after the previously confirmed visit was deleted", async () => {
+  mocks.read.mockReturnValue({ version, savedEncounterId: "deleted-visit" });
+  tx.encounter.findFirst.mockResolvedValue(null);
+  const response = await call();
+  expect(response.status).toBe(200);
+  expect(tx.encounter.create).toHaveBeenCalledOnce();
+  expect(tx.inboundDocument.update).toHaveBeenCalledOnce();
 });

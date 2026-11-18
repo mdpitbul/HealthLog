@@ -14444,7 +14444,7 @@
     "page": "Página {page}",
     "destination": "Salvar em",
     "newVisit": "Criar nova consulta",
-    "existingNote": "Os dados clínicos conferidos substituirão o bloco clínico anterior. A data, as anotações manuais e os demais vínculos serão preservados.",
+    "existingNote": "O motivo e o resultado conferidos serão adicionados às anotações existentes. Os dados clínicos substituirão o bloco anterior; a data e os demais vínculos serão preservados.",
     "existingDetails": "Dados clínicos atuais",
     "targetFailed": "Não foi possível carregar a lista ou a consulta selecionada. Tente novamente antes de escolher uma consulta existente.",
     "reviewed": "Conferi a data, os nomes, os diagnósticos e as prescrições com o original.",
@@ -14465,6 +14465,14 @@
       "treatment": "Tratamento prescrito",
       "followUp": "Próximas ações",
       "source": "Documento"
-    }
+    },
+    "headings": {
+      "treatment": "Tratamento",
+      "examinations": "Exames",
+      "control": "Acompanhamento"
+    },
+    "search": "Buscar consultas",
+    "count": "Consultas: {count}",
+    "emptyFiltered": "Nenhuma consulta corresponde à busca e às datas."
   }
 }

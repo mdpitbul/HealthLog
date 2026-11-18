@@ -14444,7 +14444,7 @@
     "page": "Page {page}",
     "destination": "Save to",
     "newVisit": "Create a new visit",
-    "existingNote": "The reviewed clinical block will be added to this visit, replacing its previous clinical block. Its date, manual notes and other links stay unchanged.",
+    "existingNote": "Reviewed reason and outcome will be added to the existing notes. Clinical details will replace the previous clinical block; date and other links stay unchanged.",
     "existingDetails": "Current clinical block",
     "targetFailed": "Could not load the visit list or selected visit. Retry before selecting an existing visit.",
     "reviewed": "I checked the date, names, diagnoses and prescriptions against the original.",
@@ -14465,6 +14465,14 @@
       "treatment": "Prescribed treatment",
       "followUp": "Further actions",
       "source": "Document"
-    }
+    },
+    "headings": {
+      "treatment": "Treatment",
+      "examinations": "Examinations",
+      "control": "Follow-up"
+    },
+    "search": "Search visits",
+    "count": "Visits: {count}",
+    "emptyFiltered": "No visits match the search and dates."
   }
 }

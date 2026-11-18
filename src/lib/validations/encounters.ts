@@ -99,9 +99,9 @@ export const encounterCreateSchema = z
     kind: encounterKindEnum.optional().default("OTHER"),
     practitionerId: id.nullable().optional(),
     /** Becomes `reasonEncrypted`. */
-    reason: z.string().max(2000).nullable().optional(),
+    reason: z.string().max(6000).nullable().optional(),
     /** Becomes `outcomeEncrypted`. */
-    outcome: z.string().max(4000).nullable().optional(),
+    outcome: z.string().max(20000).nullable().optional(),
     clinical: visitClinicalSchema.nullable().optional(),
     bodySite,
     laterality: lateralityEnum.nullable().optional(),
@@ -128,8 +128,8 @@ export const encounterUpdateSchema = z
     status: encounterStatusEnum.optional(),
     kind: encounterKindEnum.optional(),
     practitionerId: id.nullable().optional(),
-    reason: z.string().max(2000).nullable().optional(),
-    outcome: z.string().max(4000).nullable().optional(),
+    reason: z.string().max(6000).nullable().optional(),
+    outcome: z.string().max(20000).nullable().optional(),
     clinical: visitClinicalSchema.nullable().optional(),
     bodySite,
     laterality: lateralityEnum.nullable().optional(),

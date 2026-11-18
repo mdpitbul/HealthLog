@@ -14444,7 +14444,7 @@
     "page": "{page}쪽",
     "destination": "저장 위치",
     "newVisit": "새 진료 기록 만들기",
-    "existingNote": "확인한 임상 정보가 기존 임상 정보 블록을 대체합니다. 날짜, 직접 작성한 메모 및 다른 연결은 유지됩니다.",
+    "existingNote": "확인한 방문 이유와 결과를 기존 메모에 추가합니다. 임상 정보는 이전 블록을 대체하며 날짜와 다른 연결은 유지됩니다.",
     "existingDetails": "현재 임상 정보",
     "targetFailed": "목록 또는 선택한 진료 기록을 불러오지 못했습니다. 기존 기록을 선택하기 전에 다시 불러오세요.",
     "reviewed": "날짜, 이름, 진단 및 처방을 원본과 대조했습니다.",
@@ -14465,6 +14465,14 @@
       "treatment": "처방된 치료",
       "followUp": "후속 조치",
       "source": "원본 문서"
-    }
+    },
+    "headings": {
+      "treatment": "치료",
+      "examinations": "검사",
+      "control": "추적 관찰"
+    },
+    "search": "진료 기록 검색",
+    "count": "진료 기록: {count}",
+    "emptyFiltered": "검색어와 날짜에 맞는 진료 기록이 없습니다."
   }
 }

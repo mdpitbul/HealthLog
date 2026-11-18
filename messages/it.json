@@ -14444,7 +14444,7 @@
     "page": "Pagina {page}",
     "destination": "Salva in",
     "newVisit": "Crea nuova visita",
-    "existingNote": "I dati clinici verificati sostituiranno il precedente blocco clinico. Data, note manuali e altri collegamenti saranno conservati.",
+    "existingNote": "Il motivo e l’esito verificati saranno aggiunti alle note esistenti. I dati clinici sostituiranno il blocco precedente; data e altri collegamenti saranno conservati.",
     "existingDetails": "Dati clinici attuali",
     "targetFailed": "Impossibile caricare l’elenco o la visita selezionata. Riprova prima di scegliere una visita esistente.",
     "reviewed": "Ho verificato data, nomi, diagnosi e prescrizioni sull’originale.",
@@ -14465,6 +14465,14 @@
       "treatment": "Trattamento prescritto",
       "followUp": "Azioni successive",
       "source": "Documento"
-    }
+    },
+    "headings": {
+      "treatment": "Trattamento",
+      "examinations": "Esami",
+      "control": "Controllo"
+    },
+    "search": "Cerca visite",
+    "count": "Visite: {count}",
+    "emptyFiltered": "Nessuna visita corrisponde alla ricerca e alle date."
   }
 }

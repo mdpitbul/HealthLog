@@ -14444,7 +14444,7 @@
     "page": "Página {page}",
     "destination": "Guardar en",
     "newVisit": "Crear nueva visita",
-    "existingNote": "Los datos clínicos revisados sustituirán el bloque clínico anterior. Se conservarán la fecha, las notas manuales y los demás vínculos.",
+    "existingNote": "El motivo y el resultado revisados se añadirán a las notas existentes. Los datos clínicos sustituirán el bloque anterior; la fecha y los demás vínculos se conservarán.",
     "existingDetails": "Datos clínicos actuales",
     "targetFailed": "No se pudo cargar la lista o la visita seleccionada. Vuelve a cargarla antes de elegir una visita existente.",
     "reviewed": "He comprobado la fecha, los nombres, los diagnósticos y las prescripciones con el original.",
@@ -14465,6 +14465,14 @@
       "treatment": "Tratamiento prescrito",
       "followUp": "Próximos pasos",
       "source": "Documento"
-    }
+    },
+    "headings": {
+      "treatment": "Tratamiento",
+      "examinations": "Pruebas y estudios",
+      "control": "Seguimiento"
+    },
+    "search": "Buscar visitas",
+    "count": "Visitas: {count}",
+    "emptyFiltered": "No hay visitas que coincidan con la búsqueda y las fechas."
   }
 }

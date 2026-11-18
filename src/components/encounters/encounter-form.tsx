@@ -1,4 +1,5 @@
 "use client";
+import { clinicalDetails } from "@/lib/encounters/visit-notes";
 
 /**
  * The visit form.
@@ -153,7 +154,9 @@ export function draftToBody(
     practitionerId: draft.practitioner?.id ?? null,
     reason: draft.reason.trim() || null,
     outcome: draft.outcome.trim() || null,
-    ...(draft.clinical !== undefined ? { clinical: draft.clinical } : {}),
+    ...(draft.clinical !== undefined
+      ? { clinical: draft.clinical ? clinicalDetails(draft.clinical) : null }
+      : {}),
     bodySite: draft.bodySite.trim() || null,
     laterality: draft.laterality,
     ...(options.reminderId ? { reminderId: options.reminderId } : {}),

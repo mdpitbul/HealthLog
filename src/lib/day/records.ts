@@ -1,3 +1,4 @@
+import { visitNotes } from "@/lib/encounters/visit-notes";
 /**
  * The record side of a day: what ran through it and what happened on it,
  * section by section (v1.42, #613).
@@ -632,24 +633,22 @@ async function visitsPart(frame: DayFrame): Promise<SectionPart> {
     running: [],
     events: rows.map((row) => {
       const clinical = readClinical(row.clinicalEncrypted);
+      const reason = openText(row.reasonEncrypted, "visit reason");
+      const outcome = openText(row.outcomeEncrypted, "visit outcome");
+      const notes = visitNotes(reason, outcome, clinical);
       return event({
         at: row.occurredAt.toISOString(),
         kind: row.kind === "PROCEDURE" ? "procedure" : "visit",
         section: "visits",
         id: row.id,
         title:
-          openText(row.reasonEncrypted, "visit reason") ||
+          notes.reason ||
           clinical?.diagnoses ||
           clinical?.doctor ||
           row.practitioner?.name ||
           "",
         meta: row.status === "PLANNED" ? "PLANNED" : row.kind,
-        note:
-          openText(row.outcomeEncrypted, "visit outcome") ||
-          [clinical?.treatment, clinical?.followUp]
-            .filter(Boolean)
-            .join("\n\n") ||
-          null,
+        note: notes.outcome,
         docs: docs.get(row.id) ?? [],
         href: visitPath(row.id),
       });

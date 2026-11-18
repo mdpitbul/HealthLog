@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { visitNotes } from "@/lib/encounters/visit-notes";
 import type { Encounter } from "@/hooks/use-encounters";
 import { useFormatters, useTranslations } from "@/lib/i18n/context";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,16 @@ export function VisitsTable({
               "doctor",
               "clinic",
               "diagnoses",
-              "treatment",
-              "followUp",
+              "reason",
+              "outcome",
               "source",
             ].map((key) => (
               <th scope="col" className="px-3 py-3 font-medium" key={key}>
-                {t(`visitExtraction.fields.${key}`)}
+                {key === "reason"
+                  ? t("encounters.form.reason")
+                  : key === "outcome"
+                    ? t("encounters.form.outcome")
+                    : t(`visitExtraction.fields.${key}`)}
               </th>
             ))}
           </tr>
@@ -68,10 +73,12 @@ export function VisitsTable({
                 {visit.clinical?.diagnoses || "—"}
               </td>
               <td className="min-w-64 px-3 py-3 whitespace-pre-wrap">
-                {visit.clinical?.treatment || "—"}
+                {visitNotes(visit.reason, visit.outcome, visit.clinical)
+                  .reason || "—"}
               </td>
               <td className="min-w-48 px-3 py-3 whitespace-pre-wrap">
-                {visit.clinical?.followUp || "—"}
+                {visitNotes(visit.reason, visit.outcome, visit.clinical)
+                  .outcome || "—"}
               </td>
               <td className="min-w-28 px-3 py-3">
                 {visit.links?.documents

@@ -29,6 +29,12 @@ import { useEncounters, type Encounter } from "@/hooks/use-encounters";
 import { apiGet } from "@/lib/api/api-fetch";
 import { useTranslations } from "@/lib/i18n/context";
 import { EncounterSheet } from "./encounter-sheet";
+import { VisitFilterRail } from "./visit-filter-rail";
+import {
+  filterVisits,
+  type VisitFilters,
+} from "@/lib/encounters/visit-filters";
+import { useAuth } from "@/hooks/use-auth";
 import { VisitsTable } from "./visits-table";
 import { VisitCard } from "./visit-card";
 
@@ -49,6 +55,12 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
   const canAddVisit = canWriteDomain("profile");
   const canManageVisits = canManageDomain("profile");
   const list = useEncounters(enabled);
+  const { user } = useAuth();
+  const [filters, setFilters] = useState<VisitFilters>({
+    search: "",
+    from: "",
+    to: "",
+  });
 
   // `null` closed, `"new"` create, a row edits it.
   const [editing, setEditing] = useState<Encounter | "new" | null>(null);
@@ -59,14 +71,22 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
     setSession((n) => n + 1);
   };
 
-  const upcoming = list.data?.upcoming ?? [];
-  const past = list.data?.past ?? [];
+  const upcoming = filterVisits(
+    list.data?.upcoming ?? [],
+    filters,
+    user?.timezone ?? "UTC",
+  );
+  const past = filterVisits(
+    list.data?.past ?? [],
+    filters,
+    user?.timezone ?? "UTC",
+  );
 
   // `?visit=<id>` — a document's link chip names the visit it is filed
   // against. Scroll to it, and open it for someone who may edit it.
   useDeepLinkedRecord({
     param: "visit",
-    records: list.data ? [...upcoming, ...past] : undefined,
+    records: list.data ? [...list.data.upcoming, ...list.data.past] : undefined,
     anchorAttribute: "data-encounter-id",
     open: canManageVisits ? openSheet : undefined,
     // The list reads the newest hundred of each arm; a search hit can name an
@@ -74,6 +94,8 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
     resolve: fetchVisit,
   });
   const empty = upcoming.length === 0 && past.length === 0;
+  const filtering = !!(filters.search || filters.from || filters.to);
+  const noRecords = !list.data?.upcoming.length && !list.data?.past.length;
   // The next booked visit carries the window before it, resolved by the
   // server (`EncounterDTO.preparation`): which earlier visit it starts at and
   // why. Never picked here from the past list, which would be the last visit
@@ -108,32 +130,24 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
             </Button>
             {/* The empty state carries the add action while there is no
                 visit. */}
-            {!list.isPending && !list.isError && empty ? null : addButton}
+            {!list.isPending && !list.isError && noRecords && !filtering
+              ? null
+              : addButton}
           </>
         }
       />
 
+      {!list.isPending && !list.isError ? (
+        <VisitFilterRail
+          value={filters}
+          onChange={setFilters}
+          count={upcoming.length + past.length}
+          enabled={enabled && editing === null}
+        />
+      ) : null}
+
       {!empty && !list.isPending && !list.isError ? (
-        <div
-          role="group"
-          aria-label={t("visitExtraction.view")}
-          className="flex gap-2"
-        >
-          <Button
-            variant={table ? "outline" : "secondary"}
-            aria-pressed={!table}
-            onClick={() => setTable(false)}
-          >
-            {t("visitExtraction.cards")}
-          </Button>
-          <Button
-            variant={table ? "secondary" : "outline"}
-            aria-pressed={table}
-            onClick={() => setTable(true)}
-          >
-            {t("visitExtraction.table")}
-          </Button>
-        </div>
+        <VisitViewToggle table={table} onChange={setTable} />
       ) : null}
 
       {list.isError ? (
@@ -151,9 +165,13 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
       ) : empty ? (
         <EmptyState
           icon={<CalendarClock className="size-6" aria-hidden />}
-          title={t("encounters.emptyTitle")}
-          description={t("encounters.emptyDescription")}
-          action={addButton ?? undefined}
+          title={
+            filtering
+              ? t("visitExtraction.emptyFiltered")
+              : t("encounters.emptyTitle")
+          }
+          description={filtering ? undefined : t("encounters.emptyDescription")}
+          action={filtering ? undefined : (addButton ?? undefined)}
         />
       ) : (
         <div className="space-y-6">
@@ -221,5 +239,37 @@ export function VisitsSection({ enabled = true }: { enabled?: boolean }) {
         encounter={editing === "new" ? null : editing}
       />
     </section>
+  );
+}
+
+function VisitViewToggle({
+  table,
+  onChange,
+}: {
+  table: boolean;
+  onChange: (table: boolean) => void;
+}) {
+  const { t } = useTranslations();
+  return (
+    <div
+      role="group"
+      aria-label={t("visitExtraction.view")}
+      className="flex gap-2"
+    >
+      <Button
+        variant={table ? "outline" : "secondary"}
+        aria-pressed={!table}
+        onClick={() => onChange(false)}
+      >
+        {t("visitExtraction.cards")}
+      </Button>
+      <Button
+        variant={table ? "secondary" : "outline"}
+        aria-pressed={table}
+        onClick={() => onChange(true)}
+      >
+        {t("visitExtraction.table")}
+      </Button>
+    </div>
   );
 }

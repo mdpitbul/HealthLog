@@ -14444,7 +14444,7 @@
     "page": "Strona {page}",
     "destination": "Zapisz w",
     "newVisit": "Utwórz nową wizytę",
-    "existingNote": "Sprawdzone dane kliniczne zastąpią poprzedni blok kliniczny. Data, własne notatki i pozostałe powiązania zostaną zachowane.",
+    "existingNote": "Sprawdzone powód i wynik wizyty zostaną dodane do istniejących notatek. Dane kliniczne zastąpią poprzedni blok; data i pozostałe powiązania zostaną zachowane.",
     "existingDetails": "Obecne dane kliniczne",
     "targetFailed": "Nie udało się wczytać listy lub wybranej wizyty. Ponów próbę przed wybraniem istniejącej wizyty.",
     "reviewed": "Sprawdziłem datę, nazwiska, rozpoznania i zalecenia z oryginałem.",
@@ -14465,6 +14465,14 @@
       "treatment": "Zalecone leczenie",
       "followUp": "Dalsze działania",
       "source": "Dokument"
-    }
+    },
+    "headings": {
+      "treatment": "Leczenie",
+      "examinations": "Badania",
+      "control": "Kontrola"
+    },
+    "search": "Szukaj wizyt",
+    "count": "Wizyty: {count}",
+    "emptyFiltered": "Brak wizyt zgodnych z wyszukiwaniem i datami."
   }
 }

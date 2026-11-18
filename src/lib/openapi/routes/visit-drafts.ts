@@ -77,7 +77,7 @@ export const visitDraftPaths: NonNullable<ZodOpenApiObject["paths"]> = {
       tags: ["Documents"],
       summary: "Confirm reviewed visit fields and attach the source",
       description:
-        "Owner-only, no model work. Version-checked transaction creates one encounter and document link. Replaying the same confirmed version returns its existing encounterId. Selecting an owned encounter replaces only its clinical block, preserving manual fields/date/links and checking expectedUpdatedAt. No disease or medication records are created.",
+        "Owner-only, no model work. Version-checked transaction creates one encounter and document link. Replaying the same confirmed version returns its existing encounterId. Selecting an owned encounter appends reviewed reason/outcome text without discarding existing manual notes, replaces the reviewed clinical details and checks expectedUpdatedAt. Deleted visits release the document for a new review. No disease or medication records are created.",
       parameters: id,
       requestBody: {
         required: true,

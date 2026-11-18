@@ -117,24 +117,28 @@ export function VisitCard({
 
           {encounter.clinical ? (
             <div className="space-y-1 text-sm">
-              {(["clinic", "diagnoses", "treatment", "followUp"] as const).map(
-                (key) => {
-                  const value = encounter.clinical?.[key];
-                  return value ? (
-                    <p key={key} className="line-clamp-2">
-                      <span className="text-muted-foreground">
-                        {t(`visitExtraction.fields.${key}`)}:{" "}
-                      </span>
-                      {value}
-                    </p>
-                  ) : null;
-                },
-              )}
+              {(["clinic", "diagnoses"] as const).map((key) => {
+                const value = encounter.clinical?.[key];
+                return value ? (
+                  <p key={key} className="line-clamp-2">
+                    <span className="text-muted-foreground">
+                      {t(`visitExtraction.fields.${key}`)}:{" "}
+                    </span>
+                    {value}
+                  </p>
+                ) : null;
+              })}
             </div>
           ) : null}
 
           {reasonLine ? (
             <p className="text-foreground line-clamp-1 text-sm">{reasonLine}</p>
+          ) : null}
+
+          {encounter.outcome ? (
+            <p className="text-foreground line-clamp-3 text-sm whitespace-pre-wrap">
+              {encounter.outcome}
+            </p>
           ) : null}
 
           {site ? (

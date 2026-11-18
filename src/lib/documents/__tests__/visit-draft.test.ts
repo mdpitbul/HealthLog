@@ -67,6 +67,7 @@ function setup() {
   return { args, generateCompletion };
 }
 let tx: {
+  encounter: { findFirst: ReturnType<typeof vi.fn> };
   $queryRaw: ReturnType<typeof vi.fn>;
   inboundDocument: {
     findFirst: ReturnType<typeof vi.fn>;
@@ -82,6 +83,7 @@ beforeEach(() => {
     pageCount: 1,
   });
   tx = {
+    encounter: { findFirst: vi.fn().mockResolvedValue({ id: "visit-1" }) },
     $queryRaw: vi.fn(),
     inboundDocument: {
       findFirst: vi.fn().mockResolvedValue({ visitDraftEncrypted: null }),
@@ -209,4 +211,15 @@ describe("visit read timeouts and retry", () => {
       "private invalid model output",
     );
   });
+});
+
+it("can read a document again after the confirmed visit was deleted", async () => {
+  tx.inboundDocument.findFirst.mockResolvedValue({
+    visitDraftEncrypted: encryptToBytes(
+      JSON.stringify({ extraction, savedEncounterId: "deleted-visit" }),
+    ),
+  });
+  tx.encounter.findFirst.mockResolvedValue(null);
+  expect((await executeVisitDraft(setup().args)).ok).toBe(true);
+  expect(tx.inboundDocument.update).toHaveBeenCalledOnce();
 });

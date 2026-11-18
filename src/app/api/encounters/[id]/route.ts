@@ -1,3 +1,4 @@
+import { clinicalNoteUpdate } from "@/lib/encounters/clinical";
 /**
  * `GET    /api/encounters/{id}` — one owned, live visit with its links resolved.
  * `PATCH  /api/encounters/{id}` — edit it (partial; field-by-field).
@@ -103,7 +104,7 @@ export const PATCH = apiHandler(
     }
 
     const parsed = await parseJsonBody(request, encounterUpdateSchema, {
-      maxBytes: 32 * 1024,
+      maxBytes: 256 * 1024,
       errorCode: "encounter.invalid",
     });
     if (!parsed.ok) return parsed.error;
@@ -159,11 +160,8 @@ export const PATCH = apiHandler(
           ? encryptToBytes(entry.reason)
           : null;
       }
-      if (entry.clinical !== undefined) {
-        data.clinicalEncrypted = entry.clinical
-          ? encryptToBytes(JSON.stringify(entry.clinical))
-          : null;
-      }
+      const clinical = clinicalNoteUpdate(entry, existing.clinicalEncrypted);
+      if (clinical !== undefined) data.clinicalEncrypted = clinical;
       if (entry.outcome !== undefined) {
         data.outcomeEncrypted = entry.outcome
           ? encryptToBytes(entry.outcome)

@@ -14444,7 +14444,7 @@
     "page": "Pagina {page}",
     "destination": "Opslaan in",
     "newVisit": "Nieuw bezoek maken",
-    "existingNote": "De gecontroleerde klinische gegevens vervangen het bestaande klinische blok. Datum, eigen notities en andere koppelingen blijven behouden.",
+    "existingNote": "De gecontroleerde reden en uitkomst worden toegevoegd aan de bestaande notities. De klinische gegevens vervangen het vorige blok; datum en andere koppelingen blijven behouden.",
     "existingDetails": "Huidige klinische gegevens",
     "targetFailed": "De lijst of het gekozen bezoek kon niet worden geladen. Probeer opnieuw voordat je een bestaand bezoek kiest.",
     "reviewed": "Ik heb de datum, namen, diagnoses en voorschriften met het origineel gecontroleerd.",
@@ -14465,6 +14465,14 @@
       "treatment": "Voorgeschreven behandeling",
       "followUp": "Vervolgstappen",
       "source": "Brondocument"
-    }
+    },
+    "headings": {
+      "treatment": "Behandeling",
+      "examinations": "Onderzoeken",
+      "control": "Controle"
+    },
+    "search": "Bezoeken doorzoeken",
+    "count": "Bezoeken: {count}",
+    "emptyFiltered": "Geen bezoeken voor deze zoekopdracht en datums."
   }
 }

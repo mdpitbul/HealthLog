@@ -1,3 +1,4 @@
+import { visitNotes } from "@/lib/encounters/visit-notes";
 import { readClinical } from "@/lib/encounters/clinical";
 /**
  * v1.38 — doctor-visit context block for the Coach snapshot.
@@ -59,6 +60,7 @@ export interface CoachVisitEntry {
   specialty: string | null;
   /** Why the person went / is going, decrypted + sanitised; null when unset. */
   reason: string | null;
+  diagnoses?: string;
   /** What came out of it, decrypted + sanitised; null (always) for an upcoming visit. */
   outcome: string | null;
   /**
@@ -106,6 +108,11 @@ function decryptText(value: Uint8Array | null): string | null {
 function toEntry(row: EncounterRow): CoachVisitEntry {
   const bodySite = decryptText(row.bodySiteEncrypted ?? null);
   const clinical = readClinical(row.clinicalEncrypted);
+  const notes = visitNotes(
+    decryptText(row.reasonEncrypted),
+    decryptText(row.outcomeEncrypted),
+    clinical,
+  );
   return {
     occurredAt: row.occurredAt.toISOString(),
     kind: row.kind,
@@ -119,21 +126,15 @@ function toEntry(row: EncounterRow): CoachVisitEntry {
       : clinical?.specialty
         ? sanitizeForPrompt(clinical.specialty, MAX_PRACTITIONER_CHARS)
         : null,
-    reason:
-      decryptText(row.reasonEncrypted) ??
-      (clinical?.complaints
-        ? sanitizeForPrompt(clinical.complaints, MAX_TEXT_CHARS)
-        : null),
-    outcome:
-      decryptText(row.outcomeEncrypted) ??
-      (clinical
-        ? sanitizeForPrompt(
-            [clinical.diagnoses, clinical.treatment, clinical.followUp]
-              .filter(Boolean)
-              .join("\n\n"),
-            MAX_TEXT_CHARS,
-          ) || null
-        : null),
+    reason: notes.reason
+      ? sanitizeForPrompt(notes.reason, MAX_TEXT_CHARS)
+      : null,
+    outcome: notes.outcome
+      ? sanitizeForPrompt(notes.outcome, MAX_TEXT_CHARS)
+      : null,
+    ...(clinical?.diagnoses
+      ? { diagnoses: sanitizeForPrompt(clinical.diagnoses, MAX_TEXT_CHARS) }
+      : {}),
     ...(bodySite
       ? { bodySite, ...(row.laterality ? { laterality: row.laterality } : {}) }
       : {}),

@@ -14444,7 +14444,7 @@
     "page": "Seite {page}",
     "destination": "Speichern unter",
     "newVisit": "Neuen Besuch erstellen",
-    "existingNote": "Die geprüften klinischen Angaben ersetzen den bisherigen klinischen Abschnitt. Datum, persönliche Notizen und andere Verknüpfungen bleiben erhalten.",
+    "existingNote": "Der geprüfte Anlass und das Ergebnis werden den vorhandenen Notizen hinzugefügt. Die klinischen Angaben ersetzen den bisherigen Block; Datum und andere Verknüpfungen bleiben erhalten.",
     "existingDetails": "Bisherige klinische Angaben",
     "targetFailed": "Die Besuchsliste oder der gewählte Besuch konnte nicht geladen werden. Laden Sie erneut, bevor Sie einen vorhandenen Besuch wählen.",
     "reviewed": "Ich habe Datum, Namen, Diagnosen und Verordnungen am Original geprüft.",
@@ -14465,6 +14465,14 @@
       "treatment": "Verordnete Behandlung",
       "followUp": "Weitere Schritte",
       "source": "Dokument"
-    }
+    },
+    "headings": {
+      "treatment": "Behandlung",
+      "examinations": "Untersuchungen",
+      "control": "Kontrolle"
+    },
+    "search": "Besuche durchsuchen",
+    "count": "Besuche: {count}",
+    "emptyFiltered": "Keine Besuche passen zur Suche und zum Zeitraum."
   }
 }
