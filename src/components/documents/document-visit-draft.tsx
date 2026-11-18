@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useDocumentAiErrorText } from "./use-document-assist";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
@@ -69,6 +70,7 @@ function DraftSheet({
   onClose: () => void;
 }) {
   const { t } = useTranslations();
+  const aiErrorText = useDocumentAiErrorText();
   const client = useQueryClient();
   const endpoint = `/api/documents/inbound/${encodeURIComponent(documentId)}/visit-draft`;
   const key = queryKeys.documentVisitDraft(documentId);
@@ -136,7 +138,7 @@ function DraftSheet({
           </Button>
           {read.isError ? (
             <p role="alert" className="text-destructive mt-3 text-sm">
-              {t("visitExtraction.failed")} {read.error.message}
+              {t("visitExtraction.failed")} {aiErrorText(read.error)}
             </p>
           ) : null}
           {draft && !read.isPending ? (

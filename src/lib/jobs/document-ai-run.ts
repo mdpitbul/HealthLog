@@ -28,6 +28,7 @@
  * (`src/lib/jobs/reminder/register-maintenance.ts`) so pg-boss provisions it.
  */
 import type { Job } from "pg-boss";
+import { VISIT_DRAFT_TIMEOUT_MS } from "@/lib/documents/visit-draft-config";
 
 import { aiEgressRefusal } from "@/lib/ai/capabilities/egress";
 import { aiCapabilityForJob } from "@/lib/ai/capabilities/gate";
@@ -430,13 +431,14 @@ async function pickForDocumentRead(
   modelCalls: number,
   deadlineAt: number | undefined,
   now: () => number,
+  timeoutMs?: number,
 ) {
   if (run.params.mode === "text") {
     const pick = await requireDocumentTextProvider(run.userId);
     await assertRunMayEgress("documentAi", run.userId, [pick.providerType]);
     await armDeadline(
       run.id,
-      callTimeoutMs({}, pick.entry.instance.responseTimeoutSeconds),
+      callTimeoutMs({ timeoutMs }, pick.entry.instance.responseTimeoutSeconds),
       modelCalls,
       deadlineAt,
       now,
@@ -447,7 +449,7 @@ async function pickForDocumentRead(
   await assertRunMayEgress("documentAi", run.userId, [pick.providerType]);
   await armDeadline(
     run.id,
-    callTimeoutMs({}, pick.entry.instance.responseTimeoutSeconds),
+    callTimeoutMs({ timeoutMs }, pick.entry.instance.responseTimeoutSeconds),
     modelCalls,
     deadlineAt,
     now,
@@ -595,7 +597,13 @@ async function runDocumentVisitDraft(
   now: () => number,
 ): Promise<AiRunOutcome<AiRunResult>> {
   const document = await loadRunDocument(run);
-  const read = await pickForDocumentRead(run, 1, deadlineAt, now);
+  const read = await pickForDocumentRead(
+    run,
+    1,
+    deadlineAt,
+    now,
+    VISIT_DRAFT_TIMEOUT_MS,
+  );
   if (read.mode !== "vision") throw new Error("Visit extraction needs vision");
   const { executeVisitDraft } = await import("@/lib/documents/visit-draft");
   return executeVisitDraft({

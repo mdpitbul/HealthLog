@@ -89,3 +89,9 @@ handler (clinical encryption), document sheet/link block (preview and action),
 visit restore handler (the new encrypted field), and day reader (same visit's
 clinical text). The new review UI is split into smaller components rather than
 adding a large review-function baseline.
+
+Visit transcription uses a three-minute provider default, with the existing
+per-user response-time setting still taking precedence. The background run's
+deadline follows the same effective timeout. Failures retain the prior draft;
+timeouts use the translated timeout error, and diagnostics record only stage,
+elapsed time and schema field names, never clinical text or provider messages.

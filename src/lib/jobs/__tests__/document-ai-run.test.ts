@@ -799,3 +799,41 @@ describe("extract runs", () => {
     );
   });
 });
+
+const executeVisitDraft = vi.fn();
+vi.mock("@/lib/documents/visit-draft", () => ({
+  executeVisitDraft: (...args: unknown[]) => executeVisitDraft(...args),
+}));
+describe("visit read deadline", () => {
+  it.each([
+    [null, 240_000],
+    [300, 360_000],
+    [60, 120_000],
+  ])(
+    "tracks the visit timeout and respects a personal setting of %s seconds",
+    async (seconds, expiresIn) => {
+      claimAiRun.mockResolvedValue(
+        claimed({
+          kind: "DOCUMENT_VISIT_DRAFT",
+          params: { mode: "vision", budget },
+        }),
+      );
+      requireDocumentVisionProvider.mockResolvedValue(visionPick(seconds));
+      executeVisitDraft.mockResolvedValue({
+        ok: true,
+        data: { documentId: "d1", draftReady: true },
+      });
+      expect(await runDocumentAiRun("run1", NOW + 2_700_000, now)).toBe(
+        "succeeded",
+      );
+      expect(updateMany).toHaveBeenCalledWith({
+        where: { id: "run1", status: "RUNNING" },
+        data: { expiresAt: new Date(NOW + expiresIn!) },
+      });
+      expect(aiEgressRefusal).toHaveBeenCalledWith("documentAi", "u1", [
+        "anthropic",
+      ]);
+      expect(executeVisitDraft).toHaveBeenCalledOnce();
+    },
+  );
+});

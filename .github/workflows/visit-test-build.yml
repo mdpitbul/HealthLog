@@ -41,7 +41,7 @@ jobs:
         run: |
           pnpm typecheck
           pnpm test --project guards --maxWorkers=2
-          pnpm test visit-extraction.test.ts visit-draft/confirm/__tests__/route.test.ts documents/__tests__/visit-draft.test.ts visits-section.test.tsx encounter-form.test.tsx document-record-links.test.tsx encrypted-columns.test.ts ai-egress-capability-guard.test.ts ai-capability-route-inventory.test.ts visits-snapshot.test.ts visit-clinical-backup.test.ts rasterize-pdf.test.ts rasterize-pdf-font-data.test.ts rasterize-pdf-cleanup.test.ts
+          pnpm test visit-extraction.test.ts visit-draft/confirm/__tests__/route.test.ts documents/__tests__/visit-draft.test.ts visits-section.test.tsx encounter-form.test.tsx document-record-links.test.tsx encrypted-columns.test.ts ai-egress-capability-guard.test.ts ai-capability-route-inventory.test.ts visits-snapshot.test.ts src/lib/jobs/__tests__/document-ai-run.test.ts visit-clinical-backup.test.ts rasterize-pdf.test.ts rasterize-pdf-font-data.test.ts rasterize-pdf-cleanup.test.ts
       - name: Build a test image without publishing a release
         run: |
           docker build --build-arg NEXT_PUBLIC_APP_VERSION=1.47.6-visit-test --build-arg NEXT_PUBLIC_APP_BUILD_SHA="${GITHUB_SHA}" -t "healthlog:visit-test-${GITHUB_SHA}" .

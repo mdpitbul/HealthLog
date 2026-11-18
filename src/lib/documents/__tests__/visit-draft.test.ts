@@ -7,6 +7,11 @@ const m = vi.hoisted(() => ({
   settle: vi.fn(),
   refund: vi.fn(),
   decrypt: vi.fn(),
+  annotate: vi.fn(),
+}));
+vi.mock("@/lib/logging/context", async (original) => ({
+  ...(await original<typeof import("@/lib/logging/context")>()),
+  annotate: m.annotate,
 }));
 vi.mock("@/lib/documents/rasterize-pdf", () => ({ rasterizePdf: m.raster }));
 vi.mock("@/lib/db", () => ({ prisma: { $transaction: m.transaction } }));
@@ -147,5 +152,61 @@ describe("visit draft reads the original", () => {
     });
     expect((await executeVisitDraft(setup().args)).ok).toBe(false);
     expect(tx.inboundDocument.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("visit read timeouts and retry", () => {
+  it("gives the provider three minutes rather than the generic minute", async () => {
+    const { args, generateCompletion } = setup();
+    await executeVisitDraft(args);
+    expect(generateCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({ timeoutMs: 180_000 }),
+    );
+  });
+  it("reports a timeout distinctly, keeps the previous draft, and allows retry", async () => {
+    const { args, generateCompletion } = setup();
+    const timeout = new Error("private provider detail must not be logged");
+    timeout.name = "TimeoutError";
+    generateCompletion.mockRejectedValueOnce(timeout);
+    const result = await executeVisitDraft(args);
+    expect(result).toMatchObject({
+      ok: false,
+      status: 504,
+      errorCode: "aiRuns.timedOut",
+    });
+    expect(tx.inboundDocument.update).not.toHaveBeenCalled();
+    expect(m.annotate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meta: expect.objectContaining({ stage: "provider", reason: "timeout" }),
+      }),
+    );
+    expect(JSON.stringify(m.annotate.mock.calls)).not.toContain(
+      timeout.message,
+    );
+    expect((await executeVisitDraft(args)).ok).toBe(true);
+    expect(tx.inboundDocument.update).toHaveBeenCalledOnce();
+  });
+  it("distinguishes invalid output from a provider timeout without logging it", async () => {
+    const { args, generateCompletion } = setup();
+    generateCompletion.mockResolvedValue({
+      content: "private invalid model output",
+      tokensUsed: 12,
+    });
+    expect(await executeVisitDraft(args)).toMatchObject({
+      ok: false,
+      status: 422,
+      errorCode: "documents.inbound.extractFailed",
+    });
+    expect(m.annotate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          stage: "parse",
+          reason: "read_failed",
+        }),
+      }),
+    );
+    expect(JSON.stringify(m.annotate.mock.calls)).not.toContain(
+      "private invalid model output",
+    );
   });
 });

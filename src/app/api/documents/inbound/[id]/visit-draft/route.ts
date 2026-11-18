@@ -1,3 +1,4 @@
+import { VISIT_DRAFT_MAX_TOKENS } from "@/lib/documents/visit-draft-config";
 import type { NextRequest } from "next/server";
 import { apiHandler, requireAuth } from "@/lib/api-handler";
 import { apiError, apiSuccess } from "@/lib/api-response";
@@ -19,10 +20,7 @@ import {
 } from "@/lib/ai/coach/budget";
 import { findLiveDocumentRun, startAiRun } from "@/lib/documents/ai-runs/start";
 import { acceptedRunResponse } from "@/lib/documents/ai-runs/http";
-import {
-  readVisitDraft,
-  VISIT_DRAFT_MAX_TOKENS,
-} from "@/lib/documents/visit-draft";
+import { readVisitDraft } from "@/lib/documents/visit-draft";
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ id: string }> };
 export const GET = apiHandler(
